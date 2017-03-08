@@ -221,10 +221,11 @@ class COOLToCILVisitor:
         self.instructions.append(end)
         return v1
 
-    # TODO
+
     @visitor.when(ast.PropertyNode)
     def visit(self, node: ast.PropertyNode):
-        pass
+        return self.visit(node.decl)
+
 
     # TODO
     @visitor.when(ast.MethodNode)
