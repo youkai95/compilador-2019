@@ -337,7 +337,7 @@ class COOLToCILVisitor:
             check = cil.CILCHeckHierarchy(checkr, node.expresion_list[i].type_token, expr.type)
             self.instructions.append(check)
             self.instructions.append(cil.CILGotoIfNode(check, temp))
-        self.instructions.append(cil.CILErrorNode)
+
         self.instructions.append(cil.CILGotoNode(end))
 
         for i in range(0, len(node.expresion_list)):
