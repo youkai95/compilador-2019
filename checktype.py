@@ -165,6 +165,8 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.NegationNode)
     def visit(self, node, scope, errors):
+        if self.visit(node.expr, scope, errors) != int:
+            errors.append("'-' operator must be with integers")
         return int
 
     @visitor.when(ast.EqualNode)
