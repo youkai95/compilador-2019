@@ -35,11 +35,6 @@ class CheckTypeVisitor:
         right = self.visit(node.right)
         return left == int and right == int
 
-    @visitor.when(ast.NegationNode)
-    def visit(self, node, scope, errors):
-        expr = self.visit(node.expr)
-        return expr == int
-
     @visitor.when(ast.NotNode)
     def visit(self, node, scope, errors):
         expr = self.visit(node.expr)
@@ -122,7 +117,8 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, scope, errors):
-        return self.visit(node.expr)
+        self.visit(node.body)
+        return self.visit(node.ret_type)
 
     @visitor.when(ast.CaseNode)
     def visit(self, node, scope, errors):
@@ -133,10 +129,7 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.IsVoidNode)
     def visit(self, node, scope, errors):
-        if node.expr is not None:
-            pass
-        else:
-            pass
+        return bool
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node, scope, errors):
@@ -161,24 +154,44 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.CaseItemNode)
     def visit(self, node, scope, errors):
-        return self.visit(node.expr)
+        if self.visit(node.expr) is not None:
+            return self.visit(node.expr)
+        else:
+            errors.append("The exprison is None")
+            pass
 
     @visitor.when(ast.NegationNode)
     def visit(self, node, scope, errors):
-        return int
-
+		if self.visit(node, scope, errors) != int:
+			errors.append("The type of the number must be the Integer")
+		return int
+		
     @visitor.when(ast.EqualNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left != right:
+            errors.append("Both types in equality must be the same")
         return bool
 
     @visitor.when(ast.LessEqualNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left == right == int:
+            return bool
+        errors.append("Both types in comparison must be Integer")
         return bool
 
     @visitor.when(ast.LessThanNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left == right == int:
+            return bool
+        errors.append("Both types in comparison must be Integer")
         return bool
 
     @visitor.when(ast.PropertyNode)
     def visit(self, node, scope, errors):
-        return self.visit(node.expr)
+        return self.visit(node.decl)

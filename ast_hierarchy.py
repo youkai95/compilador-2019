@@ -87,8 +87,6 @@ class IfNode(AtomicNode):
         self.expr = expr
         self.else_expr = else_expr
 
-
-
 class PropertyNode(AtomicNode):
     def __init__(self, decl):
         self.decl = decl
