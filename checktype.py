@@ -169,14 +169,28 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.EqualNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left != right:
+            errors.append("Both types in equality must be the same")
         return bool
 
     @visitor.when(ast.LessEqualNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left == right == int:
+            return bool
+        errors.append("Both types in comparison must be the Integer")
         return bool
 
     @visitor.when(ast.LessThanNode)
     def visit(self, node, scope, errors):
+        left = self.visit(node.left, scope, errors)
+        right = self.visit(node.right, scope, errors)
+        if left == right == int:
+            return bool
+        errors.append("Both types in comparison must be the Integer")
         return bool
 
     @visitor.when(ast.PropertyNode)
