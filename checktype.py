@@ -37,8 +37,7 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.NotNode)
     def visit(self, node, scope, errors):
-        expr = self.visit(node.expr)
-        return expr == bool
+        return self.visit(node.expr) == bool
 
     @visitor.when(ast.LetInNode)
     def visit(self, node, scope, errors):
