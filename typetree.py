@@ -29,9 +29,11 @@ class TypeTree:
         a_p = []
         while a.parent != None:
             a_p.append(a.parent)
+            a = a.parent
 
         while b.parent != None:
             if b.parent in a_p:
                 return b.parent
+            b = b.parent
 
         return self.type_dict["Object"]
