@@ -35,9 +35,15 @@ class CheckTypeVisitor:
         right = self.visit(node.right)
         return left == int and right == int
 
+    @visitor.when(ast.NegationNode)
+    def visit(self, node, scope, errors):
+        expr = self.visit(node.expr)
+        return expr == int
+
     @visitor.when(ast.NotNode)
     def visit(self, node, scope, errors):
-        return self.visit(node.expr) == bool
+        expr = self.visit(node.expr)
+        return expr == bool
 
     @visitor.when(ast.LetInNode)
     def visit(self, node, scope, errors):
@@ -159,12 +165,6 @@ class CheckTypeVisitor:
             errors.append("The exprison is None")
             pass
 
-    @visitor.when(ast.NegationNode)
-    def visit(self, node, scope, errors):
-		if self.visit(node, scope, errors) != int:
-			errors.append("The type of the number must be the Integer")
-		return int
-		
     @visitor.when(ast.EqualNode)
     def visit(self, node, scope, errors):
         left = self.visit(node.left, scope, errors)
