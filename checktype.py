@@ -15,30 +15,33 @@ class CheckTypeVisitor:
     def visit(self, node, scope, errors):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        return left == int and right == int
+        if left != int or right != int:
+            errors.append("'+' binary operator only works with integers")
+        return int
 
     @visitor.when(ast.MinusNode)
     def visit(self, node, scope, errors):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        return left == int and right == int
+        if left != int or right != int:
+            errors.append("'-' binary operator only works with integers")
+        return int
 
     @visitor.when(ast.StarNode)
     def visit(self, node, scope, errors):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        return left == int and right == int
+        if left != int or right != int:
+            errors.append("'*' binary operator only works with integers")
+        return int
 
     @visitor.when(ast.DivNode)
     def visit(self, node, scope, errors):
         left = self.visit(node.left)
         right = self.visit(node.right)
-        return left == int and right == int
-
-    @visitor.when(ast.NegationNode)
-    def visit(self, node, scope, errors):
-        expr = self.visit(node.expr)
-        return expr == int
+        if left != int or right != int:
+            errors.append("'/' binary operator only works with integers")
+        return int
 
     @visitor.when(ast.NotNode)
     def visit(self, node, scope, errors):
@@ -101,17 +104,21 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node, scope, errors):
-        if node.expr is not None:
-            pass
-        else:
-            pass
+        obj = self.visit(node.idx_token, scope, errors)
+
+
 
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node, scope, errors):
-        if node.expr is not None:
-            pass
-        else:
-            pass
+        var_type = self.visit(node.variable, scope, errors)
+        ctype = scope.typetree.type_dict[var_type]
+        r = None
+        for m in ctype.methods:
+            if m.name == node.method:
+                r = m
+                break
+        if not r:
+            errors.append("Class '%s' doesnt contains method '%s'" % (var_type, node.method))
 
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node, scope, errors):
@@ -124,6 +131,7 @@ class CheckTypeVisitor:
     def visit(self, node, scope, errors):
         return self.visit(node.expr)
 
+    # TODO
     @visitor.when(ast.CaseNode)
     def visit(self, node, scope, errors):
         if node.expr is not None:
@@ -133,10 +141,8 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.IsVoidNode)
     def visit(self, node, scope, errors):
-        if node.expr is not None:
-            pass
-        else:
-            pass
+        self.visit(node, scope, errors)
+        return bool
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node, scope, errors):
@@ -157,8 +163,11 @@ class CheckTypeVisitor:
     def visit(self, node, scope, errors):
         if self.visit(node.conditional_token, scope, errors) != bool:
             errors.append("if condition must be boolean")
-        return self.visit(node.expr, scope, errors)
+        expr_type = self.visit(node.expr, scope, errors)
+        else_type = self.visit(node.else_expr, scope, errors)
+        return scope.typetree.check_inheritance(expr_type, else_type)
 
+    # TODO
     @visitor.when(ast.CaseItemNode)
     def visit(self, node, scope, errors):
         return self.visit(node.expr)
