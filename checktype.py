@@ -103,13 +103,27 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         for expr in node.cexpresion:
             self.visit(expr, tree, errors)
-
+        self.classType = tree.type_dict[node.idx_token]
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node, tree, errors):
-        for expr in node.expresion_list:
-            self.visit(expr, tree, errors)
-        self.classType = tree.type_dict[node.idx_token]
+        temp = None
+        clss = self.classType
+        while temp and not clss.methods:
+            for method in clss.methods:
+                if method.name == node.idx_token:
+                    temp = method
+                    break
+                clss = clss.parent
+
+        if len(temp.param_types) == len(node.expresion_list):
+            for i in range(len(node.expresion_list)):
+                if self.visit(node.expresion_list[i], tree, errors).name != temp.param_types[i]:
+                    errors.append("TODO")
+        else:
+            errors.append("TODO")
+        return temp.ret_type
+
 
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node, tree, errors):
