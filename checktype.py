@@ -187,11 +187,20 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         var_type = self.visit(node.variable, tree, errors)
         ctype = var_type
-        parent_type = tree.type_dict[node.parent]
-        while ctype:
+        r = None
+        parent_type = tree.get_type(node.parent)
+        while not r and ctype:
             if ctype == parent_type:
+                for n, m in ctype.methods.items():
+                    if n == node.method:
+                        r = m
+                        break
+                if not r:
+                    errors.append("Parent class '%s' doesnt have a definition for method '%s'" % (node.parent, node.method))
+                    return tree.get_type(r.ret_type)
                 break
             ctype = ctype.parent
+
         if not ctype:
             errors.append("Class '%s' isnt a '%s' parent" % (node.parent, var_type.name))
         if len(r.param_types) == len(node.params):
@@ -201,7 +210,7 @@ class CheckTypeVisitor:
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
-        return tree.type_dict[r.ret_type]
+        return tree.get_type(r.ret_type)
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, tree, errors):
