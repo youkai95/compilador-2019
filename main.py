@@ -5,7 +5,9 @@ from checksemantics import CheckSemanticsVisitor
 import ast_hierarchy as ast
 import logging
 
+from checktype import CheckTypeVisitor
 from scope import Scope
+from typevisitor import CheckTypeVisitor_1st, CheckTypeVisitor_2nd
 
 logging.basicConfig(
     level=logging.DEBUG,
@@ -57,7 +59,7 @@ t_star = r'\*'
 t_div = r'/'
 t_printx = r'print'
 t_scanx = r'scan'
-t_number = r'-?[0-9]+'
+t_number = r'[0-9]+'
 t_string = r'\"([^\\\n]|(\\.))*?\"' #r'\"(([a-z\x0b-!\#-_])*(\\\n))*\"'  # r'\"(([_-\x09\x0b-!\#-_])*(\\\n))*\"'
 t_complement = r'~'
 t_less = r'<'
@@ -125,7 +127,7 @@ def p_program_a(p):
 
 def p_neg(p):
     '''neg : NOT idx'''
-    p[0] = ast.NegationNode(p[2])
+    p[0] = ast.NotNode(p[2])
 
 
 def p_compl(p):
@@ -384,23 +386,44 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
-class A {
-    a : Int <- 4-2;
+class A inherits B {
+    a : Int <- -4;
     c(a : Int, b : String, c : Int) : Int {
         {
-            v <- (new B).f(5,8).q(a);
-            v;
+            v <- true;
+            v <- "caca";
         }
     };
 };
 class B {
     v : String <- "asdasd";
+    c(b : Int, c : String, q : Int) : Int {
+        (new A).c(5, "", 9)
+    };
 };
 ''', lexer=l)
+
+# CUSTOM TYPES CHECK (1st step)
+errors = []
+tvisitor = CheckTypeVisitor_1st()
+type_tree = tvisitor.visit(v, errors)
+
+if len(errors) > 0:
+    for e in errors:
+        print(e)
+    exit()
+
+# CUSTOM TYPES CHECK (2nd step)
+tvisitor = CheckTypeVisitor_2nd()
+tvisitor.visit(v, type_tree, errors)
+
+if len(errors) > 0:
+    for e in errors:
+        print(e)
+    exit()
 
 # CHECK SEMANTICS
 errors = []
@@ -410,10 +433,13 @@ is_ok = csvisitor.visit(v, scope, errors)
 
 print('Succeed!' if is_ok else 'Fail!')
 for e in errors:
-
     print(e)
-print()
 
+typecheck = CheckTypeVisitor()
+typecheck.visit(v, type_tree, errors)
+
+for e in errors:
+    print(e)
 # ===============================================================
 
 if not is_ok:
