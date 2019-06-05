@@ -401,7 +401,7 @@ class A inherits B {
 class B {
     v : String <- "asdasd";
     c(b : Int, c : String, q : Int) : Int {
-        (new A).c(5, "", 9)
+        c(5, "", false)
     };
 };
 ''', lexer=l)

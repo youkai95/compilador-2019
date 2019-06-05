@@ -141,7 +141,7 @@ class CheckSemanticsVisitor:
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node, scope, errors):
-        rtype = self.visit(node.variable)
+        rtype = INTEGER
         for p in node.expresion_list:
             rtype &= self.visit(p, scope, errors)
         return rtype
