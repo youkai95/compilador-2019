@@ -38,6 +38,11 @@ class TypeTree:
 
         return self.type_dict["Object"]
 
+    def get_type(self, name):
+        if name in self.type_dict:
+            return self.type_dict[name]
+        return None
+
     def check_variance(self, a: ClassType, b: ClassType):
         while a != b:
             if not b:
