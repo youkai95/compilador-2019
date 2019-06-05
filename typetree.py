@@ -25,7 +25,7 @@ class TypeTree:
             "IO": io_type
         }
 
-    def check_inheritance(self, a, b):
+    def check_inheritance(self, a: ClassType, b: ClassType):
         a_p = []
         while a.parent != None:
             a_p.append(a.parent)
@@ -37,3 +37,10 @@ class TypeTree:
             b = b.parent
 
         return self.type_dict["Object"]
+
+    def check_variance(self, a: ClassType, b: ClassType):
+        while a != b:
+            if not b:
+                return False
+            b = b.parent
+        return True
