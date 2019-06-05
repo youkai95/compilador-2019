@@ -229,7 +229,6 @@ class CheckTypeVisitor:
             errors.append("Method return type mistmatch")
         return v
 
-    # TODO
     @visitor.when(ast.CaseNode)
     def visit(self, node, tree,  errors):
         self.visit(node.expr, tree, errors)
