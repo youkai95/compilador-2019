@@ -31,6 +31,11 @@ class TypeTree:
             a_p.append(a.parent)
             a = a.parent
 
+    def get_type(self, name):
+        if self.type_dict.keys().__contains__(name):
+            return self.type_dict[name]
+        return None
+
         while b.parent != None:
             if b.parent in a_p:
                 return b.parent

@@ -103,7 +103,10 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         for expr in node.cexpresion:
             self.visit(expr, tree, errors)
-        self.classType = tree.type_dict[node.idx_token]
+        t = tree.get_type(node.idx_token)
+        if not t:
+            errors.append("The type is not defined")
+        return t
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node, tree, errors):
