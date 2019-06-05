@@ -139,13 +139,15 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         temp = None
         clss = self.classType
-        while temp and not clss.methods:
-            for method in clss.methods:
-                if method.name == node.idx_token:
+        while not temp and clss:
+            for name, method in clss.methods.items():
+                if name == node.idx_token:
                     temp = method
                     break
                 clss = clss.parent
-
+        if not temp:
+            errors.append("TODO")
+            return
         if len(temp.param_types) == len(node.expresion_list):
             for i in range(len(node.expresion_list)):
                 if self.visit(node.expresion_list[i], tree, errors).name != temp.param_types[i]:
@@ -183,10 +185,23 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node, tree, errors):
-        if node.expr is not None:
-            pass
+        var_type = self.visit(node.variable, tree, errors)
+        ctype = var_type
+        parent_type = tree.type_dict[node.parent]
+        while ctype:
+            if ctype == parent_type:
+                break
+            ctype = ctype.parent
+        if not ctype:
+            errors.append("Class '%s' isnt a '%s' parent" % (node.parent, var_type.name))
+        if len(r.param_types) == len(node.params):
+            for i in range(0, len(node.params)):
+                # TODO Check for specific types at parameters (varianza)
+                if self.visit(node.params[i], tree, errors).name != r.param_types[i]:
+                    errors.append("Incorrect parameter type")
         else:
-            pass
+            errors.append("Incorrect number of parameters")
+        return tree.type_dict[r.ret_type]
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, tree, errors):
