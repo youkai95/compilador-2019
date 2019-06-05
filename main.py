@@ -5,6 +5,7 @@ from checksemantics import CheckSemanticsVisitor
 import ast_hierarchy as ast
 import logging
 
+from checktype import CheckTypeVisitor
 from scope import Scope
 from typevisitor import CheckTypeVisitor_1st, CheckTypeVisitor_2nd
 
@@ -392,15 +393,15 @@ class A inherits B {
     a : Int <- -4;
     c(a : Int, b : String, c : Int) : Int {
         {
-            v <- (new B).f(5,8).q(a);
-            v;
+            v <- true;
+            v <- "caca";
         }
     };
 };
-class B inherits A {
+class B {
     v : String <- "asdasd";
     c(b : Int, c : String, q : Int) : Int {
-        89
+        (new A).c(5, "", 9)
     };
 };
 ''', lexer=l)
@@ -433,8 +434,12 @@ is_ok = csvisitor.visit(v, scope, errors)
 print('Succeed!' if is_ok else 'Fail!')
 for e in errors:
     print(e)
-print()
 
+typecheck = CheckTypeVisitor()
+typecheck.visit(v, type_tree, errors)
+
+for e in errors:
+    print(e)
 # ===============================================================
 
 if not is_ok:
