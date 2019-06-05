@@ -117,15 +117,19 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.DeclarationNode)
     def visit(self, node, tree, errors):
+        t = tree.get_type(node.type_token)
         if node.expr is not None:
             expr = self.visit(node.expr, tree, errors)
             # TODO Check for polimorphism
-            if expr != tree.type_dict[node.type_token]:
-                errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
-            node.variable_info.type = tree.type_dict[node.type_token]
-            node.variable_info.vmholder = expr
+            if not t:
+                errors.append("type '%s' is not defined" % node.type_token)
+            else:
+                if expr != t:
+                    errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
+                node.variable_info.type = t
+                node.variable_info.vmholder = expr
         else:
-            node.variable_info.type = tree.type_dict[node.type_token]
+            node.variable_info.type = t
             node.variable_info.vmholder = 0
         return node.variable_info.type
 
@@ -135,7 +139,7 @@ class CheckTypeVisitor:
             self.visit(expr, tree, errors)
         t = tree.get_type(node.idx_token)
         if not t:
-            errors.append("The type is not defined")
+            errors.append("type '%s' is not defined" % node.idx_token)
         return t
 
     @visitor.when(ast.DispatchNode)
@@ -180,17 +184,29 @@ class CheckTypeVisitor:
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
-        return tree.type_dict[r.ret_type]
+
+        t = tree.get_type(r.ret_type)
+        if not t:
+            errors.append("type is '%s' not defined" % r.ret_type)
+        return t
 
     @visitor.when(ast.NewNode)
     def visit(self, node, tree, errors):
-        return tree.type_dict[node.type_token]
+        t = tree.get_type(node.type_token)
+        if not t:
+            errors.append("type is '%s' not defined" % node.type_token)
+        return t
 
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node, tree, errors):
         var_type = self.visit(node.variable, tree, errors)
         ctype = var_type
-        parent_type = tree.type_dict[node.parent]
+        paren = tree.get_type(node.parent)
+        r = None
+        if not t:
+            errors.append("type is '%s' not defined" % node.parent)
+        else:
+            parent_type = t
         while ctype:
             if ctype == parent_type:
                 break
