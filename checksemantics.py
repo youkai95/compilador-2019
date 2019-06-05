@@ -159,25 +159,25 @@ class CheckSemanticsVisitor:
     def visit(self, node, scope, errors):
         rtype = INTEGER
         s = scope.create_child_scope()
-        methods = []
+        # methods = []
         for p in node.cexpresion:
-            if type(p) is ast.MethodNode:
-                params = []
-                for d in p.params:
-                    params.append(d.type_token)
-                methods.append(MethodType(p.name, p.ret_type, params))
+            # if type(p) is ast.MethodNode:
+            #     params = []
+            #     for d in p.params:
+            #         params.append(d.type_token)
+            #     methods.append(MethodType(p.name, p.ret_type, params))
             rtype &= self.visit(p, s, errors)
-        if rtype:
-            if node.idx_token in scope.types.type_dict:
-                errors.append("Error: Type %s already defined" % node.idx_token)
-                return ERROR
-            parent = scope.types.type_dict["Object"]
-            if node.inherit_token:
-                if not node.inherit_token in scope.types.type_dict:
-                    errors.append("Error: Parent %s not defined" % node.inherit_token)
-                    return ERROR
-                parent = scope.types.type_dict[node.inherit_token]
-            scope.types.type_dict[node.idx_token] = ClassType(node.idx_token, parent, methods)
+        # if rtype:
+        #     if node.idx_token in scope.types.type_dict:
+        #         errors.append("Error: Type %s already defined" % node.idx_token)
+        #         return ERROR
+        #     parent = scope.types.type_dict["Object"]
+        #     if node.inherit_token:
+        #         if not node.inherit_token in scope.types.type_dict:
+        #             errors.append("Error: Parent %s not defined" % node.inherit_token)
+        #             return ERROR
+        #         parent = scope.types.type_dict[node.inherit_token]
+        #     scope.types.type_dict[node.idx_token] = ClassType(node.idx_token, parent, methods)
         return rtype
 
     @visitor.when(ast.MethodNode)

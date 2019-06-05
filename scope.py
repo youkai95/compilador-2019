@@ -50,4 +50,5 @@ class Scope:
 class VariableInfo:
     def __init__(self, name):
         self.name = name
+        self.type = None
         self.vmholder = None
