@@ -190,6 +190,7 @@ class CheckSemanticsVisitor:
             if length == len(names):
                 errors.append("ERROR: parameter name '%s' at method '%s' already defined" % (p.idx_token, node.name))
                 return ERROR
+            self.visit(p, s, errors)
         return self.visit(node.body, s, errors)
 
     @visitor.when(ast.PropertyNode)

@@ -154,7 +154,8 @@ class CheckTypeVisitor:
                     errors.append("TODO")
         else:
             errors.append("TODO")
-        return temp.ret_type
+        # TODO
+        return tree.get_type(temp.ret_type)
 
 
     @visitor.when(ast.DispatchInstanceNode)
@@ -189,6 +190,8 @@ class CheckTypeVisitor:
         ctype = var_type
         r = None
         parent_type = tree.get_type(node.parent)
+        if not parent_type:
+            errors.append("Type '%s' is not defined" % node.parent)
         while not r and ctype:
             if ctype == parent_type:
                 for n, m in ctype.methods.items():
@@ -206,7 +209,7 @@ class CheckTypeVisitor:
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if self.visit(node.params[i], tree, errors).name != r.param_types[i]:
+                if tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
@@ -214,6 +217,8 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, tree, errors):
+        for param in node.params:
+            self.visit(param, tree, errors)
         v = self.visit(node.body, tree, errors)
         if v.name != node.ret_type:
             errors.append("Method return type mistmatch")
