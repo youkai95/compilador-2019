@@ -63,11 +63,15 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.PlusNode)
     def visit(self, node:ast.PlusNode):
-        return cil.CILPlusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.CILPlusNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.MinusNode)
     def visit(self, node:ast.MinusNode):
-        return cil.CILMinusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))\
+        return cil.CILMinusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
 
     @visitor.when(ast.StarNode)
     def visit(self, node:ast.StarNode):
@@ -79,8 +83,12 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.NegationNode)
     def visit(self, node:ast.NegationNode):
-        #TODO: no exite nada en CIL
-        pass
+        ret_val = self.visit(node.expr)
+        if type(ret_val) == int:
+            return -ret_val
+        r = self.define_internal_local()
+        self.instructions.append(cil.CILMinusNode(r, 0, ret_val))
+        return r
 
     @visitor.when(ast.LetInNode)
     def visit(self, node:ast.LetInNode):
@@ -94,37 +102,48 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.BlockNode)
     def visit(self, node:ast.BlockNode):
-        # TODO: to implement!!!
-        pass
+        result = 0
+        for instruction in node.expr_list:
+            result = self.visit(instruction)
+        return result
 
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode):
-        self.define_internal_local()
-        
-        pass
+        if not node.variable_info.vmholder:
+            node.variable_info.vmholder = self.define_internal_local()
+        self.instructions.append(cil.CILAssignNode(node.variable_info.vmholder, self.visit(node.expr)))
+        return node.variable_info.vmholder
 
     @visitor.when(ast.IntegerNode)
     def visit(self, node:ast.IntegerNode):
-        return int(node.integer_token.text_token)
+        return int(node.integer_token)
+
+    @visitor.when(ast.StringNode)
+    def visit(self, node:ast.StringNode):
+        data = self.register_data(node.string)
+        return data
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode):
-        # TODO: to implement!!!
-        pass
+        return node.variable_info.vmholder
 
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node:ast.PrintIntegerNode):
+        ret_val = self.visit(node.expr)
+        strc = cil.CILToStrNode(self.define_internal_local(), ret_val)
+        self.instructions.append(strc)
+        self.instructions.append(cil.CILPrintNode(strc.dest))
+        return strc.dest
         # TODO: to implement!!!
         pass
 
     @visitor.when(ast.PrintStringNode)
     def visit(self, node:ast.PrintStringNode):
+        self.instructions.append()
         return cil.CILPrintNode(self.register_data(node.string_token))
 
     @visitor.when(ast.ScanNode)
     def visit(self, node:ast.ScanNode):
         return cil.CILReadNode(self.define_internal_local())
-        # TODO: to implement!!!
-        pass
 
     # ======================================================================
