@@ -46,6 +46,7 @@ class CILArithmeticNode(CILInstructionNode):
 class CILPlusNode(CILArithmeticNode):
     pass
 
+
 class CILMinusNode(CILArithmeticNode):
     pass
 
@@ -53,6 +54,15 @@ class CILStarNode(CILArithmeticNode):
     pass
 
 class CILDivNode(CILArithmeticNode):
+    pass
+
+class CILEqualNode(CILArithmeticNode):
+    pass
+
+class CILLessThanNode(CILArithmeticNode):
+    pass
+
+class CILLessEquaNode(CILArithmeticNode):
     pass
 
 class CILGetAttribNode(CILInstructionNode):
@@ -83,7 +93,9 @@ class CILGotoNode(CILInstructionNode):
     pass
 
 class CILGotoIfNode(CILInstructionNode):
-    pass
+    def __init__(self, conditional_token, dest):
+        self.conditional_token= conditional_token
+        self.dest = dest
 
 class CILStaticCallNode(CILInstructionNode):
     pass
