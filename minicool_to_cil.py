@@ -71,15 +71,27 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.MinusNode)
     def visit(self, node:ast.MinusNode):
-        return cil.CILMinusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.MinusNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.StarNode)
     def visit(self, node:ast.StarNode):
-        return cil.CILStarNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.StarNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.DivNode)
     def visit(self, node:ast.DivNode):
-        return cil.CILDivNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.DivNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.NegationNode)
     def visit(self, node:ast.NegationNode):
@@ -92,8 +104,10 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.LetInNode)
     def visit(self, node:ast.LetInNode):
-        # TODO: to implement!!!
-        pass
+        for instruction in node.declaration_list:
+            self.visit(instruction)
+        ret_val = self.visit(node.expr)
+        return ret_val
 
     @visitor.when(ast.DeclarationNode)
     def visit(self, node:ast.DeclarationNode):
@@ -145,5 +159,102 @@ class MiniCOOLToCILVisitor:
     @visitor.when(ast.ScanNode)
     def visit(self, node:ast.ScanNode):
         return cil.CILReadNode(self.define_internal_local())
+
+    #TODO
+    @visitor.when(ast.NewNode)
+    def visit(self, node: ast.NewNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.ClassNode)
+    def visit(self, node: ast.ClassNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IfNode)
+    def visit(self, node: ast.IfNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.PropertyNode)
+    def visit(self, node: ast.PropertyNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.MethodNode)
+    def visit(self, node: ast.MethodNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IsVoidNode)
+    def visit(self, node: ast.IsVoidNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.WhileNode)
+    def visit(self, node: ast.WhileNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.CaseNode)
+    def visit(self, node: ast.CaseNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.CaseItemNode)
+    def visit(self, node: ast.CaseItemNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchNode)
+    def visit(self, node: ast.DispatchNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IntegerNode)
+    def visit(self, node: ast.IntegerNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.VariableNode)
+    def visit(self, node: ast.VariableNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.StringNode)
+    def visit(self, node: ast.StringNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.BooleanNode)
+    def visit(self, node: ast.BooleanNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchParentInstanceNode)
+    def visit(self, node: ast.DispatchParentInstanceNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchInstanceNode)
+    def visit(self, node: ast.DispatchInstanceNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.LessThanNode)
+    def visit(self, node: ast.LessThanNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.LessEqualNode)
+    def visit(self, node: ast.LessEqualNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.EqualNode)
+    def visit(self, node: ast.EqualNode):
+        pass
+
+
 
     # ======================================================================
