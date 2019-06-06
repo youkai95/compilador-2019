@@ -8,7 +8,10 @@ class CILProgramNode(CILNode):
         self.dotcode = dotcode
 
 class CILTypeNode(CILNode):
-    pass
+    def __init__(self, name, attributes, methods):
+        self.name = name
+        self.attributes = attributes
+        self.methods = methods
 
 class CILDataNode(CILNode):
     def __init__(self, vname, value):
@@ -56,34 +59,53 @@ class CILDivNode(CILArithmeticNode):
     pass
 
 class CILGetAttribNode(CILInstructionNode):
-    pass
+    def __init__(self, type_src, attr_addr):
+        self.type_scr = type_src
+        self.attr_addr = attr_addr
 
 class CILSetAttribNode(CILInstructionNode):
-    pass
+    def __init__(self, type_src, attr_addr, value):
+        self.type_scr = type_src
+        self.attr_addr = attr_addr
+        self.value = value
 
 class CILGetIndexNode(CILInstructionNode):
-    pass
+    def __init__(self, array_src, position, dst):
+        self.array_src = array_src
+        self.position = position
+        self.dst = dst
 
 class CILSetIndexNode(CILInstructionNode):
-    pass
+    def __init__(self, array_src, position, value):
+        self.array_src = array_src
+        self.position = position
+        self.value = value
 
 class CILAllocateNode(CILInstructionNode):
-    pass
+    def __init__(self, alloc_type, dst):
+        self.alloc_type = alloc_type
+        self.dst = dst
 
 class CILArrayNode(CILInstructionNode):
     pass
 
 class CILTypeOfNode(CILInstructionNode):
-    pass
+    def __init__(self, src, dst):
+        self.src = src
+        self.dst = dst
 
 class CILLabelNode(CILInstructionNode):
-    pass
+    def __init__(self, lname):
+        self.lname = lname
 
 class CILGotoNode(CILInstructionNode):
-    pass
+    def __init__(self, lname):
+        self.lname = lname
 
 class CILGotoIfNode(CILInstructionNode):
-    pass
+    def __init__(self, conditional_value, lname):
+        self.conditional_value = conditional_value
+        self.lname = lname
 
 class CILStaticCallNode(CILInstructionNode):
     pass
@@ -92,7 +114,8 @@ class CILDinamicCallNode(CILInstructionNode):
     pass
 
 class CILArgNode(CILInstructionNode):
-    pass
+    def __init__(self, arg_name):
+        self.arg_name = arg_name
 
 class CILReturnNode(CILInstructionNode):
     def __init__(self, value=None):
