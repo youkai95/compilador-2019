@@ -63,29 +63,51 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.PlusNode)
     def visit(self, node:ast.PlusNode):
-        return cil.CILPlusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.CILPlusNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.MinusNode)
     def visit(self, node:ast.MinusNode):
-        return cil.CILMinusNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))\
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.MinusNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.StarNode)
     def visit(self, node:ast.StarNode):
-        return cil.CILStarNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.StarNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.DivNode)
     def visit(self, node:ast.DivNode):
-        return cil.CILDivNode(self.define_internal_local(), self.visit(node.left), self.visit(node.right))
+        left_ret = self.visit(node.left)
+        right_ret = self.visit(node.right)
+        r = cil.DivNode(self.define_internal_local(), left_ret, right_ret)
+        self.instructions.append(r)
+        return r.dest
 
     @visitor.when(ast.NegationNode)
     def visit(self, node:ast.NegationNode):
-        #TODO: no exite nada en CIL
-        pass
+        ret_val = self.visit(node.expr)
+        if type(ret_val) == int:
+            return -ret_val
+        r = self.define_internal_local()
+        self.instructions.append(cil.CILMinusNode(r, 0, ret_val))
+        return r
 
     @visitor.when(ast.LetInNode)
     def visit(self, node:ast.LetInNode):
-        # TODO: to implement!!!
-        pass
+        for instruction in node.declaration_list:
+            self.visit(instruction)
+        ret_val = self.visit(node.expr)
+        return ret_val
 
     @visitor.when(ast.DeclarationNode)
     def visit(self, node:ast.DeclarationNode):
@@ -94,37 +116,144 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.BlockNode)
     def visit(self, node:ast.BlockNode):
-        # TODO: to implement!!!
-        pass
+        result = 0
+        for instruction in node.expr_list:
+            result = self.visit(instruction)
+        return result
 
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode):
-        self.define_internal_local()
-        
-        pass
+        if not node.variable_info.vmholder:
+            node.variable_info.vmholder = self.define_internal_local()
+        self.instructions.append(cil.CILAssignNode(node.variable_info.vmholder, self.visit(node.expr)))
+        return node.variable_info.vmholder
 
     @visitor.when(ast.IntegerNode)
     def visit(self, node:ast.IntegerNode):
-        return int(node.integer_token.text_token)
+        return int(node.integer_token)
+
+    @visitor.when(ast.StringNode)
+    def visit(self, node:ast.StringNode):
+        data = self.register_data(node.string)
+        return data
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode):
-        # TODO: to implement!!!
-        pass
+        return node.variable_info.vmholder
 
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node:ast.PrintIntegerNode):
+        ret_val = self.visit(node.expr)
+        strc = cil.CILToStrNode(self.define_internal_local(), ret_val)
+        self.instructions.append(strc)
+        self.instructions.append(cil.CILPrintNode(strc.dest))
+        return strc.dest
         # TODO: to implement!!!
         pass
 
     @visitor.when(ast.PrintStringNode)
     def visit(self, node:ast.PrintStringNode):
+        self.instructions.append()
         return cil.CILPrintNode(self.register_data(node.string_token))
 
     @visitor.when(ast.ScanNode)
     def visit(self, node:ast.ScanNode):
         return cil.CILReadNode(self.define_internal_local())
-        # TODO: to implement!!!
+
+    #TODO
+    @visitor.when(ast.NewNode)
+    def visit(self, node: ast.NewNode):
         pass
+
+    # TODO
+    @visitor.when(ast.ClassNode)
+    def visit(self, node: ast.ClassNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IfNode)
+    def visit(self, node: ast.IfNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.PropertyNode)
+    def visit(self, node: ast.PropertyNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.MethodNode)
+    def visit(self, node: ast.MethodNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IsVoidNode)
+    def visit(self, node: ast.IsVoidNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.WhileNode)
+    def visit(self, node: ast.WhileNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.CaseNode)
+    def visit(self, node: ast.CaseNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.CaseItemNode)
+    def visit(self, node: ast.CaseItemNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchNode)
+    def visit(self, node: ast.DispatchNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.IntegerNode)
+    def visit(self, node: ast.IntegerNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.VariableNode)
+    def visit(self, node: ast.VariableNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.StringNode)
+    def visit(self, node: ast.StringNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.BooleanNode)
+    def visit(self, node: ast.BooleanNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchParentInstanceNode)
+    def visit(self, node: ast.DispatchParentInstanceNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.DispatchInstanceNode)
+    def visit(self, node: ast.DispatchInstanceNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.LessThanNode)
+    def visit(self, node: ast.LessThanNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.LessEqualNode)
+    def visit(self, node: ast.LessEqualNode):
+        pass
+
+    # TODO
+    @visitor.when(ast.EqualNode)
+    def visit(self, node: ast.EqualNode):
+        pass
+
 
     # ======================================================================
