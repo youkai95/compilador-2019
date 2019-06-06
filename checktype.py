@@ -50,18 +50,26 @@ class CheckTypeVisitor:
     @visitor.when(ast.NegationNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
-        if expr != tree.type_dict["Int"]:
+        if expr != tree.get_type("Int"):
             # TODO
-            errors.append("TODO")
-        return tree.type_dict["Int"]
+            errors.append("Negation operator is only valid with Integers")
+        return tree.get_type("Int")
 
     @visitor.when(ast.NotNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
-        if expr != tree.type_dict["Bool"]:
+        if expr != tree.get_type("Bool"):
             # TODO
-            errors.append("TODO")
-        return tree.type_dict["Bool"]
+            errors.append("Not operator is only valid with booleans")
+        return tree.get_type("Bool")
+
+    @visitor.when(ast.ComplementNode)
+    def visit(self, node, tree, errors):
+        expr = self.visit(node.expr, tree, errors)
+        if expr != tree.get_type("Int"):
+            # TODO
+            errors.append("Complement operator is only valid with Integers")
+        return tree.get_type("Int")
 
     @visitor.when(ast.LetInNode)
     def visit(self, node, tree, errors):
@@ -81,7 +89,7 @@ class CheckTypeVisitor:
         expr = self.visit(node.expr, tree, errors)
         if node.variable_info.type:
             # TODO Check for polimorphism
-            if node.variable_info.type != expr:
+            if not tree.check_variance(node.variable_info.type, expr):
                 errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
             node.variable_info.vmholder = expr
         else:
@@ -91,7 +99,7 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.IntegerNode)
     def visit(self, node, tree, errors):
-        return tree.type_dict["Int"]
+        return tree.get_type("Int")
 
     @visitor.when(ast.VariableNode)
     def visit(self, node, tree, errors):
@@ -101,19 +109,20 @@ class CheckTypeVisitor:
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
-        print(expr)
+        #print(expr)
         return expr
 
     # TODO
     @visitor.when(ast.PrintStringNode)
     def visit(self, node, tree, errors):
-        print(node.string_token.text_token)
-        return tree.type_dict["IO"]
+        #print(node.string_token.text_token)
+        return tree.get_type("IO")
 
     # TODO
     @visitor.when(ast.ScanNode)
     def visit(self, node, tree, errors):
-        return input()
+        return tree.get_type("IO")
+        #return input()
 
     @visitor.when(ast.DeclarationNode)
     def visit(self, node, tree, errors):
@@ -124,7 +133,7 @@ class CheckTypeVisitor:
             if not t:
                 errors.append("type '%s' is not defined" % node.type_token)
             else:
-                if expr != t:
+                if not tree.check_variance(t, expr):
                     errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
                 node.variable_info.type = t
                 node.variable_info.vmholder = expr
@@ -135,11 +144,12 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.ClassNode)
     def visit(self, node, tree, errors):
-        for expr in node.cexpresion:
-            self.visit(expr, tree, errors)
         t = tree.get_type(node.idx_token)
         if not t:
             errors.append("type '%s' is not defined" % node.idx_token)
+        self.classType = t
+        for expr in node.cexpresion:
+            self.visit(expr, tree, errors)
         return t
 
     @visitor.when(ast.DispatchNode)
@@ -181,7 +191,7 @@ class CheckTypeVisitor:
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if self.visit(node.params[i], tree, errors).name != r.param_types[i]:
+                if not tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
@@ -223,7 +233,7 @@ class CheckTypeVisitor:
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
+                if not tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
@@ -242,15 +252,17 @@ class CheckTypeVisitor:
     @visitor.when(ast.CaseNode)
     def visit(self, node, tree,  errors):
         self.visit(node.expr, tree, errors)
-        result = self.visit(node.expr_list[0])
-        for expr in node.expr_list:
-            result = tree.check_inheritance(self.visit(expr, tree, errors), result)
+        result = self.visit(node.expresion_list[0], tree, errors)
+        for expr in range(1, len(node.expresion_list)):
+            result = tree.check_inheritance(self.visit(node.expresion_list[expr], tree, errors), result)
         return result
 
     @visitor.when(ast.CaseItemNode)
     def visit(self, node, tree, errors):
-        if self.visit(node.expr, tree, errors) is not None:
-            return self.visit(node.expr, tree, errors)
+        self.visit(node.variable, tree, errors)
+        r = self.visit(node.expr, tree, errors)
+        if r is not None:
+            return r
         else:
             errors.append("The expresion is None")
 

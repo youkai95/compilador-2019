@@ -339,10 +339,10 @@ def p_let_declr_list(p):
 
 
 def p_let_declr_list_a(p):
-    '''let_declr_list_a : declare_expresion let_declr_list_a
+    '''let_declr_list_a : comma declare_expresion let_declr_list_a
                         | empty'''
-    if len(p) > 2:
-        p[0] = [p[1]] + p[2]
+    if len(p) > 3:
+        p[0] = [p[2]] + p[3]
     else:
         p[0] = []
 
@@ -392,15 +392,16 @@ v = parser.parse('''
 class A inherits B {
     a : Int <- -4;
     c(a : Int, b : String, c : A) : Int {
-        {
-            v <- (new B).c(a, b, new B);
-        }
+        case a of
+            y : String => y+5;
+            y : Int => y+1;
+        esac
     };
 };
 class B {
     v : String <- "asdasd";
     c(b : Int, c : String, q : A) : Int {
-        c(5, "", false)
+        c(5, "", new A)
     };
 };
 ''', lexer=l)
