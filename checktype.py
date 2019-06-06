@@ -244,7 +244,7 @@ class CheckTypeVisitor:
         for param in node.params:
             self.visit(param, tree, errors)
         v = self.visit(node.body, tree, errors)
-        if v.name != node.ret_type:
+        if not v or v.name != node.ret_type:
             errors.append("Method return type mistmatch")
         return v
 

@@ -390,8 +390,8 @@ parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class A inherits B {
-    a : Int <- -4;
-    c(a : Int, b : String, c : A) : Int {
+    a : Into <- -4;
+    c(a : Int, b : Stringa, c : A) : Inot {
         case a of
             y : String => y+5;
             y : Int => y+1;
@@ -400,7 +400,7 @@ class A inherits B {
 };
 class B {
     v : String <- "asdasd";
-    c(b : Int, c : String, q : A) : Int {
+    c(b : Int, c : Stringa, q : A) : Inot {
         c(5, "", new A)
     };
 };
