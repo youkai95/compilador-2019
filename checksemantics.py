@@ -57,6 +57,18 @@ class CheckSemanticsVisitor:
         node.variable_info = scope.get_variable_info(vname)
         return rtype
 
+    @visitor.when(ast.NotNode)
+    def visit(self, node, scope, errors):
+        return self.visit(node.expr, scope, errors)
+
+    @visitor.when(ast.NegationNode)
+    def visit(self, node, scope, errors):
+        return self.visit(node.expr, scope, errors)
+
+    @visitor.when(ast.ComplementNode)
+    def visit(self, node, scope, errors):
+        return self.visit(node.expr, scope, errors)
+
     @visitor.when(ast.IntegerNode)
     def visit(self, node, scope, errors):
         return INTEGER
@@ -110,7 +122,7 @@ class CheckSemanticsVisitor:
     @visitor.when(ast.CaseItemNode)
     def visit(self, node, scope, errors):
         s = scope.create_child_scope()
-        s.define_variable(node.variable.idx_token)
+        self.visit(node.variable, s, errors)
         return self.visit(node.expr, s, errors)
 
     @visitor.when(ast.IfNode)
