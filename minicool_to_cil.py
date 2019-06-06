@@ -153,7 +153,6 @@ class MiniCOOLToCILVisitor:
         self.instructions.append(strc)
         self.instructions.append(cil.CILPrintNode(strc.dest))
         return strc.dest
-        # TODO: to implement!!!
         pass
 
     @visitor.when(ast.PrintStringNode)
