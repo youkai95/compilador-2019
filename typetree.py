@@ -27,6 +27,8 @@ class TypeTree:
 
     def check_inheritance(self, a: ClassType, b: ClassType):
         a_p = []
+        if a == b:
+            return a
         while a.parent != None:
             a_p.append(a.parent)
             a = a.parent
