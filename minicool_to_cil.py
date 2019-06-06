@@ -111,8 +111,13 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.DeclarationNode)
     def visit(self, node:ast.DeclarationNode):
-        # TODO: to implement!!!
-        pass
+        if node.expr:
+            ret_val = self.visit(node.expr)
+            node.variable_info = ret_val
+            return ret_val
+        var = self.define_internal_local()
+        node.variable_info = var
+        return var
 
     @visitor.when(ast.BlockNode)
     def visit(self, node:ast.BlockNode):
@@ -124,9 +129,9 @@ class MiniCOOLToCILVisitor:
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode):
         if not node.variable_info.vmholder:
-            node.variable_info.vmholder = self.define_internal_local()
-        self.instructions.append(cil.CILAssignNode(node.variable_info.vmholder, self.visit(node.expr)))
-        return node.variable_info.vmholder
+            node.variable_info = self.define_internal_local()
+        self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr)))
+        return node.variable_info
 
     @visitor.when(ast.IntegerNode)
     def visit(self, node:ast.IntegerNode):
@@ -139,7 +144,7 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode):
-        return node.variable_info.vmholder
+        return node.variable_info
 
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node:ast.PrintIntegerNode):
@@ -148,17 +153,18 @@ class MiniCOOLToCILVisitor:
         self.instructions.append(strc)
         self.instructions.append(cil.CILPrintNode(strc.dest))
         return strc.dest
-        # TODO: to implement!!!
         pass
 
     @visitor.when(ast.PrintStringNode)
     def visit(self, node:ast.PrintStringNode):
-        self.instructions.append()
-        return cil.CILPrintNode(self.register_data(node.string_token))
+        self.instructions.append(cil.CILPrintNode(self.register_data(node.string_token)))
+        return 0
 
     @visitor.when(ast.ScanNode)
     def visit(self, node:ast.ScanNode):
-        return cil.CILReadNode(self.define_internal_local())
+        n = cil.CILReadNode(self.define_internal_local())
+        self.instructions.append(n)
+        return n.dest
 
     #TODO
     @visitor.when(ast.NewNode)
