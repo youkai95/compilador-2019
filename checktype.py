@@ -161,7 +161,8 @@ class CheckTypeVisitor:
                     errors.append("TODO")
         else:
             errors.append("TODO")
-        return temp.ret_type
+        # TODO
+        return tree.get_type(temp.ret_type)
 
 
     @visitor.when(ast.DispatchInstanceNode)
@@ -201,29 +202,37 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         var_type = self.visit(node.variable, tree, errors)
         ctype = var_type
-        paren = tree.get_type(node.parent)
         r = None
-        if not t:
-            errors.append("type is '%s' not defined" % node.parent)
-        else:
-            parent_type = t
-        while ctype:
+        parent_type = tree.get_type(node.parent)
+        if not parent_type:
+            errors.append("Type '%s' is not defined" % node.parent)
+        while not r and ctype:
             if ctype == parent_type:
+                for n, m in ctype.methods.items():
+                    if n == node.method:
+                        r = m
+                        break
+                if not r:
+                    errors.append("Parent class '%s' doesnt have a definition for method '%s'" % (node.parent, node.method))
+                    return tree.get_type(r.ret_type)
                 break
             ctype = ctype.parent
+
         if not ctype:
             errors.append("Class '%s' isnt a '%s' parent" % (node.parent, var_type.name))
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if self.visit(node.params[i], tree, errors).name != r.param_types[i]:
+                if tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
-        return tree.type_dict[r.ret_type]
+        return tree.get_type(r.ret_type)
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, tree, errors):
+        for param in node.params:
+            self.visit(param, tree, errors)
         v = self.visit(node.body, tree, errors)
         if v.name != node.ret_type:
             errors.append("Method return type mistmatch")

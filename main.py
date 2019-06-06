@@ -391,17 +391,16 @@ l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class A inherits B {
     a : Int <- -4;
-    c(a : Int, b : String, c : Int) : Int {
+    c(a : Int, b : String, c : A) : Int {
         {
-            v <- true;
-            v <- "caca";
+            v <- (new B).c(a, b, new B);
         }
     };
 };
 class B {
     v : String <- "asdasd";
-    c(b : Int, c : String, q : Int) : Int {
-        (new A).c(5, "", 9)
+    c(b : Int, c : String, q : A) : Int {
+        c(5, "", false)
     };
 };
 ''', lexer=l)

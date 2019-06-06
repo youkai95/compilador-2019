@@ -141,7 +141,7 @@ class CheckSemanticsVisitor:
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node, scope, errors):
-        rtype = self.visit(node.variable)
+        rtype = INTEGER
         for p in node.expresion_list:
             rtype &= self.visit(p, scope, errors)
         return rtype
@@ -190,6 +190,7 @@ class CheckSemanticsVisitor:
             if length == len(names):
                 errors.append("ERROR: parameter name '%s' at method '%s' already defined" % (p.idx_token, node.name))
                 return ERROR
+            self.visit(p, s, errors)
         return self.visit(node.body, s, errors)
 
     @visitor.when(ast.PropertyNode)
