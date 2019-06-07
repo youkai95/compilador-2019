@@ -80,6 +80,7 @@ class ClassNode(AtomicNode):
         self.idx_token = idx_token
         self.inherit_token = inherit_token
         self.cexpresion = cexpresion
+        self.vtable = None
 
 class IfNode(AtomicNode):
     def __init__(self, conditional_token, expr, else_expr):
@@ -97,6 +98,7 @@ class MethodNode(AtomicNode):
         self.params = params
         self.ret_type = ret_type
         self.body = body
+        self.vinfo = None
 
 class IsVoidNode(AtomicNode):
     def __init__(self, expr):

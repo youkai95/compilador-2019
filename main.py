@@ -6,6 +6,7 @@ import ast_hierarchy as ast
 import logging
 
 from checktype import CheckTypeVisitor
+from cool_to_cil import COOLToCILVisitor
 from scope import Scope
 from typevisitor import CheckTypeVisitor_1st, CheckTypeVisitor_2nd
 
@@ -390,19 +391,18 @@ parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class A inherits B {
-    a : Into <- -(6+ 9);
-    c(a : Int, b : Stringa, c : A) : Inot {
-        case a of
-            y : String => y+5;
-            y : Int => y+1;
-        esac
+    a : Int <- -(6+ 9);
+    c(a : Int, b : String, c : A) : String {
+        if (a < 9) then "sato" else "" fi
     };
 };
 class B {
     v : String <- "asdasd";
-    c(b : Int, c : Stringa, q : A) : Inot {
+    w : Int <- 30;
+    d(b : Int, c : String, q : A) : Int {
         {
-            v <- new A;
+            a <- v;
+            a;
         }
     };
 };
@@ -446,3 +446,8 @@ for e in errors:
 
 if not is_ok:
     exit()
+
+# CIL GENERATION
+cil = COOLToCILVisitor()
+a = cil.visit(v)
+print(a)

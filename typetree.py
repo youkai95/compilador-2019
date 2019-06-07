@@ -1,22 +1,24 @@
 class ClassType:
-    def __init__(self, name, parent=None, methods=None):
+    def __init__(self, name, parent=None, methods=None, attrb=None):
         self.name = name
         self.parent = parent
         self.methods = methods
+        self.attributes = attrb
 
 class MethodType:
     def __init__(self, name, rettype, param_types):
         self.name = name
         self.ret_type = rettype
         self.param_types = param_types
+        self.cil_name = ""
 
 class TypeTree:
     def __init__(self):
-        obj_type = ClassType("Object", None)
+        obj_type = ClassType("Object", None, [])
         int_type = ClassType("Int", obj_type)
         string_type = ClassType("String", obj_type)
         bool_type = ClassType("Bool", obj_type)
-        io_type = ClassType("IO", obj_type)
+        io_type = ClassType("IO", obj_type, [])
         self.type_dict = {
             "Object": obj_type,
             "Int": int_type,
