@@ -5,7 +5,7 @@ from scope import VariableInfo
 from typetree import ClassType
 
 
-class MiniCOOLToCILVisitor:
+class COOLToCILVisitor:
     def __init__(self):
         self.types = []
         self.dotdata = []
@@ -57,11 +57,13 @@ class MiniCOOLToCILVisitor:
         if not type_info:
             return
         self.build_type(type_info.parent, attrib, methods)
-        for name in type_info.methods:
-            methods.append(name)
-            type_info.methods[name].cil_name = f"{type_info.name}_{name}"
-        for name in type_info.attributes:
-            attrib.append(name)
+        if type_info.methods:
+            for name in type_info.methods:
+                methods.append(name)
+                type_info.methods[name].cil_name = f"{type_info.name}_{name}"
+        if type_info.attributes:
+            for name in type_info.attributes:
+                attrib.append(name)
 
     def build_arg_name(self, fname, pname):
         return f"{fname}_{pname}"
@@ -227,8 +229,8 @@ class MiniCOOLToCILVisitor:
     # TODO
     @visitor.when(ast.MethodNode)
     def visit(self, node: ast.MethodNode):
-        self.instructions.clear()
-        self.localvars.clear()
+        self.instructions = []
+        self.localvars = []
         args = []
         for param in node.params:
             name = self.build_arg_name(node.name, param.idx_token)
