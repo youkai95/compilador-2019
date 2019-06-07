@@ -1,14 +1,16 @@
 class ClassType:
-    def __init__(self, name, parent=None, methods=None):
+    def __init__(self, name, parent=None, methods=None, attrb=None):
         self.name = name
         self.parent = parent
         self.methods = methods
+        self.attributes = attrb
 
 class MethodType:
     def __init__(self, name, rettype, param_types):
         self.name = name
         self.ret_type = rettype
         self.param_types = param_types
+        self.cil_name = ""
 
 class TypeTree:
     def __init__(self):
