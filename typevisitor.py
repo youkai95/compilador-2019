@@ -17,17 +17,28 @@ class CheckTypeVisitor_1st:
     @visitor.when(ast.ClassNode)
     def visit(self, node, types, errors):
         methods = {}
+        attrb = []
         for p in node.cexpresion:
             if type(p) is ast.MethodNode:
                 params = []
                 for d in p.params:
                     params.append(d.type_token)
-                methods[p.name] = typetree.MethodType(p.name, p.ret_type, params)
+                if p.name in methods:
+                    errors.append("Method '%s' already defined in type '%s'" % (p.name, node.idx_token))
+                    return 0
+                m = typetree.MethodType(p.name, p.ret_type, params)
+                methods[p.name] = m
+                p.vinfo = m
+            else:
+                if p.decl.idx_token in attrb:
+                    errors.append("Property '%s' already defined in type '%s'" % (p.decl.idx_token, node.idx_token))
+                attrb.append(p.decl.idx_token)
         if node.idx_token in types.type_dict:
             errors.append("Error: Type %s already defined" % node.idx_token)
             return 0
         parent = types.type_dict["Object"]
-        types.type_dict[node.idx_token] = typetree.ClassType(node.idx_token, parent, methods)
+        types.type_dict[node.idx_token] = typetree.ClassType(node.idx_token, parent, methods, attrb)
+        node.vtable = types.type_dict[node.idx_token]
         return types
 
 class CheckTypeVisitor_2nd:
@@ -58,7 +69,7 @@ class CheckTypeVisitor_2nd:
                 # Overloads
                 for m in types.type_dict[node.idx_token].methods.values():
                     if m.name in parent.methods and (parent.methods[m.name].param_types != m.param_types or parent.methods[m.name].ret_type != m.ret_type):
-                        errors.append("Method error")
+                        errors.append("Method overload error")
                 p = p.parent
 
             types.type_dict[node.idx_token].parent = parent

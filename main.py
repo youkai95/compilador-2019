@@ -400,6 +400,7 @@ class A inherits B {
 };
 class B {
     v : String <- "asdasd";
+    w : Int <- 30;
     c(b : Int, c : Stringa, q : A) : Inot {
         {
             v <- new A;
