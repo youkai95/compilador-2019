@@ -202,7 +202,11 @@ class MiniCOOLToCILVisitor:
     # TODO
     @visitor.when(ast.IfNode)
     def visit(self, node: ast.IfNode):
-        pass
+        v = self.visit(node.conditional_token)
+        doIf = cil.CILLabelNode("")
+
+        self.visit(node.expr)
+        self.visit(node.else_expr)
 
     # TODO
     @visitor.when(ast.PropertyNode)
@@ -232,7 +236,9 @@ class MiniCOOLToCILVisitor:
     # TODO
     @visitor.when(ast.WhileNode)
     def visit(self, node: ast.WhileNode):
-        pass
+        self.visit(node.conditional_token)
+        self.visit(node.expr)
+        return 0
 
     # TODO
     @visitor.when(ast.CaseNode)
@@ -249,10 +255,9 @@ class MiniCOOLToCILVisitor:
     def visit(self, node: ast.DispatchNode):
         pass
 
-    # TODO
     @visitor.when(ast.BooleanNode)
     def visit(self, node: ast.BooleanNode):
-        pass
+        return bool(node.value)
 
     # TODO
     @visitor.when(ast.DispatchParentInstanceNode)
@@ -264,21 +269,28 @@ class MiniCOOLToCILVisitor:
     def visit(self, node: ast.DispatchInstanceNode):
         pass
 
-    # TODO
     @visitor.when(ast.LessThanNode)
     def visit(self, node: ast.LessThanNode):
-        pass
+        left_ret = self.visit(node.left)
+        rigth_ret = self.visit(node.right)
+        ret_type = cil.CILLessThanNode(self.define_internal_local(), left_ret, rigth_ret)
+        self.instructions.append(ret_type)
+        return ret_type.dest
 
-    # TODO
     @visitor.when(ast.LessEqualNode)
     def visit(self, node: ast.LessEqualNode):
-        pass
+        left_ret = self.visit(node.left)
+        rigth_ret = self.visit(node.right)
+        ret_type = cil.CILLessEqualNode(self.define_internal_local(), left_ret, rigth_ret)
+        self.instructions.append(ret_type)
+        return ret_type.dest
 
-    # TODO
     @visitor.when(ast.EqualNode)
     def visit(self, node: ast.EqualNode):
-        pass
-
-
+        left_ret = self.visit(node.left)
+        rigth_ret = self.visit(node.right)
+        ret_type = cil.CILEqualNode(self.define_internal_local(), left_ret, rigth_ret)
+        self.instructions.append(ret_type)
+        return ret_type.dest
 
     # ======================================================================

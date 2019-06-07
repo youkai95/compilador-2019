@@ -58,6 +58,15 @@ class CILStarNode(CILArithmeticNode):
 class CILDivNode(CILArithmeticNode):
     pass
 
+class CILEqualNode(CILArithmeticNode):
+    pass
+
+class CILLessThanNode(CILArithmeticNode):
+    pass
+
+class CILLessEquaNode(CILArithmeticNode):
+    pass
+
 class CILGetAttribNode(CILInstructionNode):
     def __init__(self, type_src, attr_addr):
         self.type_scr = type_src
