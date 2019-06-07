@@ -15,11 +15,16 @@ class MiniCOOLToCILVisitor:
         self.instructions = []
         self.internal_count = 0
         self.current_type = None
-
+        self.label_count = 0
 
     # ======================================================================
     # =[ UTILS ]============================================================
     # ======================================================================
+
+    def gen_label(self):
+        self.label_count+=1
+        return "label_%d"%(self.label_count)
+
 
     def build_internal_vname(self, vname):
         vname = f'{self.internal_count}_{self.current_function_name}_{vname}'
@@ -203,10 +208,16 @@ class MiniCOOLToCILVisitor:
     @visitor.when(ast.IfNode)
     def visit(self, node: ast.IfNode):
         v = self.visit(node.conditional_token)
-        doIf = cil.CILLabelNode("")
-
-        self.visit(node.expr)
-        self.visit(node.else_expr)
+        v1 = self.define_internal_local()
+        doIf = cil.CILLabelNode(self.gen_label())
+        end = cil.CILLabelNode(self.gen_label())
+        self.instructions.append(cil.CILGotoIfNode(v, doIf))
+        self.instructions.append(cil.CILAssignNode(v1, self.visit(node.else_expr)))
+        self.instructions.append(cil.CILGotoNode(end))
+        self.instructions.append(doIf)
+        self.instructions.append(cil.CILAssignNode(v1, self.visit(node.expr)))
+        self.instructions.append(end)
+        return v1
 
     # TODO
     @visitor.when(ast.PropertyNode)
@@ -228,16 +239,25 @@ class MiniCOOLToCILVisitor:
         self.instructions.append(cil.CILReturnNode(self.visit(node.body)))
         self.dotcode.append(cil.CILFunctionNode(self.current_function_name, args, self.localvars, self.instructions))
 
-    # TODO
     @visitor.when(ast.IsVoidNode)
     def visit(self, node: ast.IsVoidNode):
-        pass
+        result = cil.CILEqualNode(self.define_internal_local(), self.visit(node.expr), 0)
+        self.instructions.append(result)
+        return result.dest
 
-    # TODO
     @visitor.when(ast.WhileNode)
     def visit(self, node: ast.WhileNode):
-        self.visit(node.conditional_token)
+        v = self.visit(node.conditional_token)
+        start = cil.CILLabelNode(self.gen_label())
+        dowhile = cil.CILLabelNode(self.gen_label())
+        end = cil.CILLabelNode(self.gen_label())
+        self.instructions.append(start)
+        self.instructions.append(cil.CILGotoIfNode(v, dowhile))
+        self.instructions.append(cil.CILGotoNode(end))
+        self.instructions.append(dowhile)
         self.visit(node.expr)
+        self.instructions.append(cil.CILGotoNode(start))
+        self.instructions.append(end)
         return 0
 
     # TODO
@@ -245,19 +265,19 @@ class MiniCOOLToCILVisitor:
     def visit(self, node: ast.CaseNode):
         pass
 
-    # TODO
     @visitor.when(ast.CaseItemNode)
     def visit(self, node: ast.CaseItemNode):
-        pass
+        self.visit(node.variable)
+        return self.visit(node.expr)
+
+    @visitor.when(ast.BooleanNode)
+    def visit(self, node: ast.BooleanNode):
+        return bool(node.value)
 
     # TODO
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode):
         pass
-
-    @visitor.when(ast.BooleanNode)
-    def visit(self, node: ast.BooleanNode):
-        return bool(node.value)
 
     # TODO
     @visitor.when(ast.DispatchParentInstanceNode)
