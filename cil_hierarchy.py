@@ -64,7 +64,7 @@ class CILEqualNode(CILArithmeticNode):
 class CILLessThanNode(CILArithmeticNode):
     pass
 
-class CILLessEquaNode(CILArithmeticNode):
+class CILLessEqualNode(CILArithmeticNode):
     pass
 
 class CILGetAttribNode(CILInstructionNode):
