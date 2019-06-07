@@ -2,15 +2,19 @@ import ast_hierarchy as ast
 import cil_hierarchy as cil
 import visitor
 from scope import VariableInfo
+from typetree import ClassType
 
 
 class MiniCOOLToCILVisitor:
     def __init__(self):
+        self.types = []
         self.dotdata = []
+        self.dotcode = []
         self.current_function_name = ""
         self.localvars = []
         self.instructions = []
         self.internal_count = 0
+        self.current_type = None
 
 
     # ======================================================================
@@ -43,6 +47,19 @@ class MiniCOOLToCILVisitor:
         data_node = cil.CILDataNode(vname, value)
         self.dotdata.append(data_node)
         return data_node
+
+    def build_type(self, type_info: ClassType, attrib, methods):
+        if not type_info:
+            return
+        self.build_type(type_info.parent, attrib, methods)
+        for name in type_info.methods:
+            methods.append(name)
+            type_info.methods[name].cil_name = f"{type_info.name}_{name}"
+        for name in type_info.attributes:
+            attrib.append(name)
+
+    def build_arg_name(self, fname, pname):
+        return f"{fname}_{pname}"
     # ======================================================================
 
 
@@ -56,10 +73,9 @@ class MiniCOOLToCILVisitor:
 
     @visitor.when(ast.ProgramNode)
     def visit(self, node:ast.ProgramNode):
-        self.current_function_name = 'main'
-        self.visit(node.expr)
-        main = cil.CILFunctionNode('main', [], self.localvars, self.instructions)
-        return cil.CILProgramNode([], self.dotdata, [main])
+        for expr in node.expr:
+            self.visit(expr)
+        return cil.CILProgramNode(self.types, self.dotdata, self.dotcode)
 
     @visitor.when(ast.PlusNode)
     def visit(self, node:ast.PlusNode):
@@ -73,7 +89,7 @@ class MiniCOOLToCILVisitor:
     def visit(self, node:ast.MinusNode):
         left_ret = self.visit(node.left)
         right_ret = self.visit(node.right)
-        r = cil.MinusNode(self.define_internal_local(), left_ret, right_ret)
+        r = cil.CILMinusNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
         return r.dest
 
@@ -81,7 +97,7 @@ class MiniCOOLToCILVisitor:
     def visit(self, node:ast.StarNode):
         left_ret = self.visit(node.left)
         right_ret = self.visit(node.right)
-        r = cil.StarNode(self.define_internal_local(), left_ret, right_ret)
+        r = cil.CILStarNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
         return r.dest
 
@@ -89,7 +105,7 @@ class MiniCOOLToCILVisitor:
     def visit(self, node:ast.DivNode):
         left_ret = self.visit(node.left)
         right_ret = self.visit(node.right)
-        r = cil.DivNode(self.define_internal_local(), left_ret, right_ret)
+        r = cil.CILDivNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
         return r.dest
 
@@ -153,7 +169,6 @@ class MiniCOOLToCILVisitor:
         self.instructions.append(strc)
         self.instructions.append(cil.CILPrintNode(strc.dest))
         return strc.dest
-        pass
 
     @visitor.when(ast.PrintStringNode)
     def visit(self, node:ast.PrintStringNode):
@@ -169,12 +184,20 @@ class MiniCOOLToCILVisitor:
     #TODO
     @visitor.when(ast.NewNode)
     def visit(self, node: ast.NewNode):
+        cil.CILAllocateNode()
         pass
 
     # TODO
     @visitor.when(ast.ClassNode)
     def visit(self, node: ast.ClassNode):
-        pass
+        vt: ClassType = node.vtable
+        methods = []
+        attrib = []
+        self.current_type = vt
+        self.build_type(vt, attrib, methods)
+        for expr in node.cexpresion:
+            self.visit(expr)
+        self.types.append(cil.CILTypeNode(node.idx_token, attrib, methods))
 
     # TODO
     @visitor.when(ast.IfNode)
@@ -189,7 +212,17 @@ class MiniCOOLToCILVisitor:
     # TODO
     @visitor.when(ast.MethodNode)
     def visit(self, node: ast.MethodNode):
-        pass
+        self.instructions.clear()
+        self.localvars.clear()
+        args = []
+        for param in node.params:
+            name = self.build_arg_name(node.name, param.idx_token)
+            args.append(cil.CILArgNode(name))
+            param.variable_info.name = name
+
+        self.current_function_name = node.vinfo.cil_name
+        self.instructions.append(cil.CILReturnNode(self.visit(node.body)))
+        self.dotcode.append(cil.CILFunctionNode(self.current_function_name, args, self.localvars, self.instructions))
 
     # TODO
     @visitor.when(ast.IsVoidNode)
@@ -214,21 +247,6 @@ class MiniCOOLToCILVisitor:
     # TODO
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode):
-        pass
-
-    # TODO
-    @visitor.when(ast.IntegerNode)
-    def visit(self, node: ast.IntegerNode):
-        pass
-
-    # TODO
-    @visitor.when(ast.VariableNode)
-    def visit(self, node: ast.VariableNode):
-        pass
-
-    # TODO
-    @visitor.when(ast.StringNode)
-    def visit(self, node: ast.StringNode):
         pass
 
     # TODO
