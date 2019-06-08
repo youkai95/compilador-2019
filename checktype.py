@@ -21,7 +21,9 @@ class CheckTypeVisitor:
         right = self.visit(node.right, tree, errors)
         if left != tree.type_dict["Int"] or right != tree.type_dict["Int"]:
             errors.append("'+' binary operator only works with integers")
-        return tree.type_dict["Int"]
+        t = tree.type_dict["Int"]
+        node.type = t
+        return t
 
     @visitor.when(ast.MinusNode)
     def visit(self, node, tree, errors):
@@ -29,7 +31,9 @@ class CheckTypeVisitor:
         right = self.visit(node.right, tree, errors)
         if left != tree.type_dict["Int"] or right != tree.type_dict["Int"]:
             errors.append("'-' binary operator only works with integers")
-        return tree.type_dict["Int"]
+        t = tree.type_dict["Int"]
+        node.type = t
+        return t
 
     @visitor.when(ast.StarNode)
     def visit(self, node, tree, errors):
@@ -37,7 +41,9 @@ class CheckTypeVisitor:
         right = self.visit(node.right, tree, errors)
         if left != tree.type_dict["Int"] or right != tree.type_dict["Int"]:
             errors.append("'*' binary operator only works with integers")
-        return tree.type_dict["Int"]
+        t = tree.type_dict["Int"]
+        node.type = t
+        return t
 
     @visitor.when(ast.DivNode)
     def visit(self, node, tree, errors):
@@ -45,61 +51,69 @@ class CheckTypeVisitor:
         right = self.visit(node.right, tree, errors)
         if left != tree.type_dict["Int"] or right != tree.type_dict["Int"]:
             errors.append("'/' binary operator only works with integers")
-        return tree.type_dict["Int"]
+        t = tree.type_dict["Int"]
+        node.type = t
+        return t
 
     @visitor.when(ast.NegationNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
         if expr != tree.get_type("Int"):
-            # TODO
             errors.append("Negation operator is only valid with Integers")
+        node.type = tree.get_type("Int")
         return tree.get_type("Int")
 
     @visitor.when(ast.NotNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
         if expr != tree.get_type("Bool"):
-            # TODO
             errors.append("Not operator is only valid with booleans")
-        return tree.get_type("Bool")
+        t = tree.get_type("Bool")
+        node.type = t
+        return t
 
     @visitor.when(ast.ComplementNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
         if expr != tree.get_type("Int"):
-            # TODO
             errors.append("Complement operator is only valid with Integers")
-        return tree.get_type("Int")
+        t = tree.get_type("Int")
+        node.type = t
+        return t
 
     @visitor.when(ast.LetInNode)
     def visit(self, node, tree, errors):
         for declaration in node.declaration_list:
             self.visit(declaration, tree, errors)
-        return self.visit(node.expr, tree, errors)
+        t = self.visit(node.expr, tree, errors)
+        node.type = t
+        return t
 
     @visitor.when(ast.BlockNode)
     def visit(self, node, tree, errors):
         result = None
         for expr in node.expr_list:
             result = self.visit(expr, tree, errors)
+        node.type = result
         return result
 
     @visitor.when(ast.AssignNode)
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
         if node.variable_info.type:
-            # TODO Check for polimorphism
             if not tree.check_variance(node.variable_info.type, expr):
                 errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
             node.variable_info.vmholder = expr
         else:
             node.variable_info.type = expr
-        # TODO Check if is correct to return variable declaration type or new assign type
+        node.type = node.variable_info.type
         return node.variable_info.type
 
     @visitor.when(ast.IntegerNode)
     def visit(self, node, tree, errors):
-        return tree.get_type("Int")
+        t = tree.get_type("Int")
+        node.type = t
+        return t
 
     @visitor.when(ast.VariableNode)
     def visit(self, node, tree, errors):
@@ -110,18 +124,23 @@ class CheckTypeVisitor:
     def visit(self, node, tree, errors):
         expr = self.visit(node.expr, tree, errors)
         #print(expr)
+        node.type = expr
         return expr
 
     # TODO
     @visitor.when(ast.PrintStringNode)
     def visit(self, node, tree, errors):
         #print(node.string_token.text_token)
-        return tree.get_type("IO")
+        t = tree.get_type("IO")
+        node.type = t
+        return t
 
     # TODO
     @visitor.when(ast.ScanNode)
     def visit(self, node, tree, errors):
-        return tree.get_type("IO")
+        t = tree.get_type("IO")
+        node.type = t
+        return t
         #return input()
 
     @visitor.when(ast.DeclarationNode)
@@ -140,6 +159,8 @@ class CheckTypeVisitor:
         else:
             node.variable_info.type = t
             node.variable_info.vmholder = 0
+
+        node.type =  node.variable_info.type
         return node.variable_info.type
 
     @visitor.when(ast.ClassNode)
@@ -150,6 +171,7 @@ class CheckTypeVisitor:
         self.classType = t
         for expr in node.cexpresion:
             self.visit(expr, tree, errors)
+        node.type =t
         return t
 
     @visitor.when(ast.DispatchNode)
@@ -171,9 +193,9 @@ class CheckTypeVisitor:
                     errors.append("TODO")
         else:
             errors.append("TODO")
-        # TODO
-        return tree.get_type(temp.ret_type)
-
+        t = tree.get_type(temp.ret_type)
+        node.type = t
+        return t
 
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node, tree, errors):
@@ -199,6 +221,7 @@ class CheckTypeVisitor:
         t = tree.get_type(r.ret_type)
         if not t:
             errors.append("type is '%s' not defined" % r.ret_type)
+        node.type = t
         return t
 
     @visitor.when(ast.NewNode)
@@ -206,6 +229,7 @@ class CheckTypeVisitor:
         t = tree.get_type(node.type_token)
         if not t:
             errors.append("type is '%s' not defined" % node.type_token)
+        node.type = t
         return t
 
     @visitor.when(ast.DispatchParentInstanceNode)
@@ -237,7 +261,9 @@ class CheckTypeVisitor:
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
-        return tree.get_type(r.ret_type)
+        t = tree.get_type(r.ret_type)
+        node.type = t
+        return t
 
     @visitor.when(ast.MethodNode)
     def visit(self, node, tree, errors):
@@ -246,6 +272,7 @@ class CheckTypeVisitor:
         v = self.visit(node.body, tree, errors)
         if not v or v.name != node.ret_type:
             errors.append("Method return type mistmatch")
+        node.type = v
         return v
 
     @visitor.when(ast.CaseNode)
@@ -254,6 +281,7 @@ class CheckTypeVisitor:
         result = self.visit(node.expresion_list[0], tree, errors)
         for expr in range(1, len(node.expresion_list)):
             result = tree.check_inheritance(self.visit(node.expresion_list[expr], tree, errors), result)
+        node.type = result
         return result
 
     @visitor.when(ast.CaseItemNode)
@@ -261,27 +289,35 @@ class CheckTypeVisitor:
         self.visit(node.variable, tree, errors)
         r = self.visit(node.expr, tree, errors)
         if r is not None:
+            node.type = r
             return r
         else:
             errors.append("The expresion is None")
 
     @visitor.when(ast.IsVoidNode)
     def visit(self, node, tree, errors):
-        return tree.type_dict["Bool"]
+        t = tree.type_dict["Bool"]
+        node.type = t
+        return t
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node, tree, errors):
-        return tree.type_dict["Bool"]
+        t = tree.type_dict["Bool"]
+        node.type = t
+        return t
 
     @visitor.when(ast.StringNode)
     def visit(self, node, tree, errors):
-        return tree.type_dict["String"]
+        t = tree.type_dict["String"]
+        node.type = t
+        return t
 
     @visitor.when(ast.WhileNode)
     def visit(self, node, tree, errors):
         self.visit(node.expr, tree, errors)
         if self.visit(node.conditional_token, tree, errors) != tree.type_dict["Bool"]:
             errors.append("while condition must be boolean")
+        node.type = None
         return None
 
     @visitor.when(ast.IfNode)
@@ -290,7 +326,9 @@ class CheckTypeVisitor:
             errors.append("if condition must be boolean")
         expr_type = self.visit(node.expr, tree, errors)
         else_type = self.visit(node.else_expr, tree, errors)
-        return tree.check_inheritance(expr_type, else_type)
+        t = tree.check_inheritance(expr_type, else_type)
+        node.type = t
+        return t
 
     @visitor.when(ast.EqualNode)
     def visit(self, node, tree, errors):
@@ -298,26 +336,34 @@ class CheckTypeVisitor:
         right = self.visit(node.right, tree, errors)
         if left != right:
             errors.append("Both types in equality must be the same")
-        return tree.type_dict["Bool"]
+        t = tree.type_dict["Bool"]
+        node.type = t
+        return t
 
     @visitor.when(ast.LessEqualNode)
     def visit(self, node, tree, errors):
         left = self.visit(node.left, tree, errors)
         right = self.visit(node.right, tree, errors)
+        t = tree.type_dict["Bool"]
+        node.type = t
         if left == right == tree.type_dict["Int"]:
-            return tree.type_dict["Bool"]
+            return t
         errors.append("Both types in comparison must be Integer")
-        return tree.type_dict["Bool"]
+        return t
 
     @visitor.when(ast.LessThanNode)
     def visit(self, node, tree, errors):
         left = self.visit(node.left, tree, errors)
         right = self.visit(node.right, tree, errors)
+        t = tree.type_dict["Bool"]
+        node.type = t
         if left == right == tree.type_dict["Int"]:
-            return tree.type_dict["Bool"]
+            return t
         errors.append("Both types in comparison must be Integer")
-        return tree.type_dict["Bool"]
+        return t
 
     @visitor.when(ast.PropertyNode)
     def visit(self, node, tree, errors):
-        return self.visit(node.decl, tree, errors)
+        t = self.visit(node.decl, tree, errors)
+        node.type = t
+        return t
