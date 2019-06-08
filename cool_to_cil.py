@@ -278,10 +278,12 @@ class COOLToCILVisitor:
         labels = []
         end = cil.CILLabelNode(self.gen_label())
         ends = []
+        checkr = self.define_internal_local()
+
         for i in range(len(node.expresion_list)):
             temp = cil.CILLabelNode(self.gen_label())
             labels.append(temp)
-            check =cil.CILCHeckHierarchy(self.define_internal_local(), node.expresion_list[i].type_token, expr.type)
+            check = cil.CILCHeckHierarchy(checkr, node.expresion_list[i].type_token, expr.type)
             self.instructions.append(check)
             self.instructions.append(cil.CILGotoIfNode(check, temp))
         self.instructions.append(cil.CILErrorNode)
@@ -292,21 +294,22 @@ class COOLToCILVisitor:
             for j in range(i + 1, len(node.expresion_list)):
                 e1 = node.expresion_list[j].type_token
                 e2 = node.expresion_list[i].type_token
-                check = cil.CILCHeckHierarchy(self.define_internal_local(), e1, e2)
+                check = cil.CILCHeckHierarchy(checkr, e1, e2)
                 self.instructions.append(check)
                 self.instructions.append(cil.CILGotoIfNode(check, labels[j]))
             t = cil.CILLabelNode(self.gen_label())
             ends.append(t)
             self.instructions.append(cil.CILGotoNode(t))
 
+        r = self.define_internal_local()
         for i in ends:
             self.instructions.append(i)
             e = self.visit(node.expresion_list[i])
-            result = cil.CILAssignNode(self.define_internal_local(), e)
+            self.instructions.append(cil.CILAssignNode(r, e))
             self.instructions.append(cil.CILGotoNode(end))
 
         self.instructions.append(end)
-        return result.dest
+        return r
 
     @visitor.when(ast.CaseItemNode)
     def visit(self, node: ast.CaseItemNode):
@@ -320,7 +323,13 @@ class COOLToCILVisitor:
     # TODO
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode):
-        pass
+        args = []
+        r = self.define_internal_local()
+        for param in node.expresion_list:
+            self.instructions.append(cil.CILArgNode(self.visit(param)))
+        self.instructions.append(cil.CILDinamicCallNode(self.current_type.name, node.idx_token, r))
+        return r
+
 
     # TODO
     @visitor.when(ast.DispatchParentInstanceNode)
