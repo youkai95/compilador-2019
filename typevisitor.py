@@ -17,7 +17,7 @@ class CheckTypeVisitor_1st:
     @visitor.when(ast.ClassNode)
     def visit(self, node, types, errors):
         methods = {}
-        attrb = []
+        attrb = {}
         for p in node.cexpresion:
             if type(p) is ast.MethodNode:
                 params = []
@@ -32,7 +32,7 @@ class CheckTypeVisitor_1st:
             else:
                 if p.decl.idx_token in attrb:
                     errors.append("Property '%s' already defined in type '%s'" % (p.decl.idx_token, node.idx_token))
-                attrb.append(p.decl.idx_token)
+                attrb[p.decl.idx_token] = p
         if node.idx_token in types.type_dict:
             errors.append("Error: Type %s already defined" % node.idx_token)
             return 0
