@@ -194,7 +194,6 @@ class COOLToCILVisitor:
         cil.CILAllocateNode()
         pass
 
-    # TODO
     @visitor.when(ast.ClassNode)
     def visit(self, node: ast.ClassNode):
         vt: ClassType = node.vtable
@@ -206,7 +205,6 @@ class COOLToCILVisitor:
             self.visit(expr)
         self.types.append(cil.CILTypeNode(node.idx_token, attrib, methods))
 
-    # TODO
     @visitor.when(ast.IfNode)
     def visit(self, node: ast.IfNode):
         v = self.visit(node.conditional_token)
@@ -226,7 +224,6 @@ class COOLToCILVisitor:
     def visit(self, node: ast.PropertyNode):
         pass
 
-    # TODO
     @visitor.when(ast.MethodNode)
     def visit(self, node: ast.MethodNode):
         self.instructions = []
@@ -265,7 +262,39 @@ class COOLToCILVisitor:
     # TODO
     @visitor.when(ast.CaseNode)
     def visit(self, node: ast.CaseNode):
-        pass
+        expr = self.visit(node.expr)
+        labels = []
+        end = cil.CILLabelNode(self.gen_label())
+        ends = []
+        for i in range(len(node.expresion_list)):
+            temp = cil.CILLabelNode(self.gen_label())
+            labels.append(temp)
+            check =cil.CILCHeckHierarchy(self.define_internal_local(), node.expresion_list[i].type_token, expr.type)
+            self.instructions.append(check)
+            self.instructions.append(cil.CILGotoIfNode(check, temp))
+        self.instructions.append(cil.CILErrorNode)
+        self.instructions.append(cil.CILGotoNode(end))
+
+        for i in range(0, len(node.expresion_list)):
+            self.instructions.append(labels[i])
+            for j in range(i + 1, len(node.expresion_list)):
+                e1 = node.expresion_list[j].type_token
+                e2 = node.expresion_list[i].type_token
+                check = cil.CILCHeckHierarchy(self.define_internal_local(), e1, e2)
+                self.instructions.append(check)
+                self.instructions.append(cil.CILGotoIfNode(check, labels[j]))
+            t = cil.CILLabelNode(self.gen_label())
+            ends.append(t)
+            self.instructions.append(cil.CILGotoNode(t))
+
+        for i in ends:
+            self.instructions.append(i)
+            e = self.visit(node.expresion_list[i])
+            result = cil.CILAssignNode(self.define_internal_local(), e)
+            self.instructions.append(cil.CILGotoNode(end))
+
+        self.instructions.append(end)
+        return result.dest
 
     @visitor.when(ast.CaseItemNode)
     def visit(self, node: ast.CaseItemNode):
