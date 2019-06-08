@@ -401,9 +401,14 @@ class B {
     w : Int <- 30;
     d(b : Int, c : String, q : A) : Int {
         {
+            v <- c;
             a <- v;
             a;
         }
+    };
+    
+    f() : String {
+        v <- "locota"
     };
 };
 ''', lexer=l)

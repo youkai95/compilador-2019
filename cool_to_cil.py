@@ -152,8 +152,14 @@ class COOLToCILVisitor:
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode):
         if not node.variable_info.vmholder:
-            node.variable_info = self.define_internal_local()
-        self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr)))
+            if not node.variable_info.name in self.current_type.attributes:
+                var = self.define_internal_local()
+                node.variable_info.name = var.name
+                node.variable_info.vmholder = var.vmholder
+                self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr)))
+            else:
+                self.instructions.append(cil.CILSetAttribNode(self.current_type.name, node.idx_token, self.visit(node.expr)))
+
         return node.variable_info
 
     @visitor.when(ast.IntegerNode)
@@ -167,8 +173,14 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode):
-
-        return node.variable_info
+        if node.variable_info.vmholder is not None:
+            return node.variable_info
+        else:
+            result = self.define_internal_local()
+            node.variable_info.name = result.name
+            node.variable_info.vmholder = result.vmholder
+            self.instructions.append(cil.CILGetAttribNode(result, self.current_type.name, node.idx_token))
+            return result
 
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node:ast.PrintIntegerNode):

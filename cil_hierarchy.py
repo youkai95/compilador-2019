@@ -68,9 +68,10 @@ class CILLessEqualNode(CILArithmeticNode):
     pass
 
 class CILGetAttribNode(CILInstructionNode):
-    def __init__(self, type_src, attr_addr):
+    def __init__(self, dest, type_src, attr_addr):
         self.type_scr = type_src
         self.attr_addr = attr_addr
+        self.dest = dest
 
 class CILSetAttribNode(CILInstructionNode):
     def __init__(self, type_src, attr_addr, value):
