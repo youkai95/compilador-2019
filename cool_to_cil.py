@@ -259,7 +259,6 @@ class COOLToCILVisitor:
         self.instructions.append(end)
         return 0
 
-    # TODO
     @visitor.when(ast.CaseNode)
     def visit(self, node: ast.CaseNode):
         expr = self.visit(node.expr)
