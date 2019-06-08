@@ -240,7 +240,32 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.IsVoidNode)
     def visit(self, node: ast.IsVoidNode):
-        result = cil.CILEqualNode(self.define_internal_local(), self.visit(node.expr), 0)
+        # t = self.define_internal_local()
+        # expr = self.visit(node.expr)
+        # endC = cil.CILLabelNode(self.gen_label())
+        # end = cil.CILLabelNode(self.gen_label())
+        # v = cil.CILEqualNode(expr.type.name, "Bool")
+        # self.instructions.append(v)
+        # self.instructions.append(cil.CILGotoIfNode(v, endC))
+        # v = cil.CILEqualNode(expr.type.name, "Int")
+        # self.instructions.append(v)
+        # self.instructions.append(cil.CILGotoIfNode(v, endC))
+        # v = cil.CILEqualNode(expr.type.name, "String")
+        # self.instructions.append(v)
+        # self.instructions.append(cil.CILGotoIfNode(v, endC))
+        # result = cil.CILEqualNode(self.define_internal_local(), expr, 0)
+        # self.instructions.append(result)
+        # r = cil.CILAssignNode(t, result.dest)
+        # self.instructions.append(cil.CILGotoNode(end))
+        # self.instructions.append(endC)
+        # r = cil.CILAssignNode(t, 0)
+        # self.instructions.append(end)
+        # return r.dest
+
+        expr = self.visit(node.expr)
+        if expr.type.name == "Bool" or expr.type.name == "Int" or expr.type.name == "String":
+            return 0
+        result = cil.CILEqualNode(self.define_internal_local(), expr, 0)
         self.instructions.append(result)
         return result.dest
 
