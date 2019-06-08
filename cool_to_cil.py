@@ -201,11 +201,11 @@ class COOLToCILVisitor:
         self.instructions.append(n)
         return n.dest
 
-    #TODO
     @visitor.when(ast.NewNode)
     def visit(self, node: ast.NewNode):
-        cil.CILAllocateNode()
-        pass
+        var = self.define_internal_local()
+        self.instructions.append(cil.CILAllocateNode(node.type_token, var))
+        # TODO Carry with type tree to get type parameters
 
     @visitor.when(ast.ClassNode)
     def visit(self, node: ast.ClassNode):
