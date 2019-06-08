@@ -3,6 +3,7 @@ import cil_hierarchy as cil
 import visitor
 from scope import VariableInfo
 from typetree import ClassType
+from typetree import TypeTree
 
 
 class COOLToCILVisitor:
@@ -349,23 +350,30 @@ class COOLToCILVisitor:
     # TODO
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode, type_tree):
-        args = []
         r = self.define_internal_local()
         for param in node.expresion_list:
             self.instructions.append(cil.CILArgNode(self.visit(param, type_tree)))
         self.instructions.append(cil.CILDinamicCallNode(self.current_type.name, node.idx_token, r))
         return r
 
-
-    # TODO
     @visitor.when(ast.DispatchParentInstanceNode)
-    def visit(self, node: ast.DispatchParentInstanceNode, type_tree):
-        pass
+    def visit(self, node: ast.DispatchParentInstanceNode, type_tree:TypeTree):
+        r = self.define_internal_local()
+        self.instructions.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        for param in node.params:
+            self.instructions.append(cil.CILArgNode(self.visit(param, type_tree)))
+        self.instructions.append(cil.CILDinamicCallNode(node.parent, node.method , r))
+        return r
 
     # TODO
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node: ast.DispatchInstanceNode, type_tree):
-        pass
+        r = self.define_internal_local()
+        self.instructions.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        for param in node.params:
+            self.instructions.append(cil.CILArgNode(self.visit(param, type_tree)))
+        self.instructions.append(cil.CILDinamicCallNode(node.type, node.method, r))
+        return r
 
     @visitor.when(ast.LessThanNode)
     def visit(self, node: ast.LessThanNode, type_tree):
@@ -390,5 +398,11 @@ class COOLToCILVisitor:
         ret_type = cil.CILEqualNode(self.define_internal_local(), left_ret, rigth_ret)
         self.instructions.append(ret_type)
         return ret_type.dest
+
+    @visitor.when(ast.NotNode)
+    def visit(self, node: ast.NotNode, type_tree):
+        r = cil.CILNotNode(self.visit(node.expr, type_tree))
+        self.instructions.append(r)
+        return r
 
     # ======================================================================
