@@ -67,11 +67,20 @@ class CILLessThanNode(CILArithmeticNode):
 class CILLessEqualNode(CILArithmeticNode):
     pass
 
+class CILCHeckHierarchy(CILInstructionNode):
+    def __init__(self, dest, a, b):
+        self.dest = dest
+        self.a = a
+        self.b = b
+
 class CILGetAttribNode(CILInstructionNode):
     def __init__(self, dest, type_src, attr_addr):
         self.type_scr = type_src
         self.attr_addr = attr_addr
         self.dest = dest
+
+class CILErrorNode(CILInstructionNode):
+    pass
 
 class CILSetAttribNode(CILInstructionNode):
     def __init__(self, type_src, attr_addr, value):
