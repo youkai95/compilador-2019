@@ -454,5 +454,5 @@ if not is_ok:
 
 # CIL GENERATION
 cil = COOLToCILVisitor()
-a = cil.visit(v)
+a = cil.visit(v, type_tree)
 print(a)
