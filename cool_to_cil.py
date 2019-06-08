@@ -59,8 +59,8 @@ class COOLToCILVisitor:
         self.build_type(type_info.parent, attrib, methods)
         if type_info.methods:
             for name in type_info.methods:
-                methods.append(name)
                 type_info.methods[name].cil_name = f"{type_info.name}_{name}"
+                methods.append(type_info.methods[name].cil_name)
         if type_info.attributes:
             for name in type_info.attributes:
                 attrib.append(name)
@@ -167,6 +167,7 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode):
+
         return node.variable_info
 
     @visitor.when(ast.PrintIntegerNode)
