@@ -393,7 +393,7 @@ v = parser.parse('''
 class A inherits B {
     a : Int <- -(6+ 9);
     c(a : Int, b : String, c : A) : String {
-        if (a < 9) then "sato" else "" fi
+        new B
     };
 };
 class B {
@@ -407,9 +407,11 @@ class B {
         }
     };
     
-    f() : String {
-        v <- "locota"
-    };
+    f() : String {{
+        v <- "locota";
+        d(5 + 9, v, new A);
+        v;
+    }};
 };
 ''', lexer=l)
 
