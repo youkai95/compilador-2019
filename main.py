@@ -402,11 +402,11 @@ class B {
     w : Int <- 30;
     d(b : Int, c : String, q : B) : Int {
         {
-            if v = "123" then
-                q <- new A
-            else
-                q <- new B
-            fi;
+            case q of
+                a : Int => a;
+                a : A => a;
+                a : B => a;
+            esac;
         }
     };
     

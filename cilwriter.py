@@ -112,7 +112,8 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILGetAttribNode)
     def visit(self, node:cil.CILGetAttribNode):
         dst = self.get_value(node.dest)
-        self.emit(f'{dst} = GETATTR {node.type_scr} {node.attr_addr}')
+        objname = self.get_value(node.type_scr)
+        self.emit(f'{dst} = GETATTR {objname} {node.attr_addr}')
 
     @visitor.when(cil.CILSetAttribNode)
     def visit(self, node:cil.CILSetAttribNode):

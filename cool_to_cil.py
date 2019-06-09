@@ -190,14 +190,22 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode, type_tree):
-        if node.variable_info.vmholder is not None:
+        r = self.define_internal_local()
+        if node.variable_info.name in self.current_typename.attributes:
+            self.instructions.append(cil.CILGetAttribNode(r, self.selftype, node.idx_token))
+            return r
+        elif node.variable_info in self.arguments:
             return node.variable_info
+            #self.instructions.append(cil.CILAssignNode(r, node.variable_info))
         else:
-            result = self.define_internal_local()
-            #node.variable_info.name = result.name
-            #node.variable_info.vmholder = result.vmholder
-            self.instructions.append(cil.CILGetAttribNode(result, self.selftype.name, node.idx_token))
-            return result
+            #if node.variable_info.vmholder is not None:
+            return node.variable_info
+            #else:
+                # result = self.define_internal_local()
+                # #node.variable_info.name = result.name
+                # #node.variable_info.vmholder = result.vmholder
+                # self.instructions.append(cil.CILGetAttribNode(result, self.selftype.name, node.idx_token))
+                # return result
 
     @visitor.when(ast.PrintIntegerNode)
     def visit(self, node:ast.PrintIntegerNode, type_tree):
@@ -334,27 +342,27 @@ class COOLToCILVisitor:
         for i in range(len(node.expresion_list)):
             temp = cil.CILLabelNode(self.gen_label())
             labels.append(temp)
-            check = cil.CILCHeckHierarchy(checkr, node.expresion_list[i].type_token, expr.type)
+            check = cil.CILCHeckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr.type)
             self.instructions.append(check)
-            self.instructions.append(cil.CILGotoIfNode(check, temp))
+            self.instructions.append(cil.CILGotoIfNode(checkr, temp))
         self.instructions.append(cil.CILErrorNode)
         self.instructions.append(cil.CILGotoNode(end))
 
         for i in range(0, len(node.expresion_list)):
             self.instructions.append(labels[i])
             for j in range(i + 1, len(node.expresion_list)):
-                e1 = node.expresion_list[j].type_token
-                e2 = node.expresion_list[i].type_token
+                e1 = node.expresion_list[j].variable.type_token
+                e2 = node.expresion_list[i].variable.type_token
                 check = cil.CILCHeckHierarchy(checkr, e1, e2)
                 self.instructions.append(check)
-                self.instructions.append(cil.CILGotoIfNode(check, labels[j]))
+                self.instructions.append(cil.CILGotoIfNode(checkr, labels[j]))
             t = cil.CILLabelNode(self.gen_label())
             ends.append(t)
             self.instructions.append(cil.CILGotoNode(t))
 
         r = self.define_internal_local()
-        for i in ends:
-            self.instructions.append(i)
+        for i in range(len(ends)):
+            self.instructions.append(ends[i])
             e = self.visit(node.expresion_list[i], type_tree)
             self.instructions.append(cil.CILAssignNode(r, e))
             self.instructions.append(cil.CILGotoNode(end))
