@@ -103,7 +103,7 @@ class CheckTypeVisitor:
         if node.variable_info.type:
             if not tree.check_variance(node.variable_info.type, expr):
                 errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
-            node.variable_info.vmholder = expr
+            #node.variable_info.vmholder = expr
         else:
             node.variable_info.type = expr
         node.type = node.variable_info.type
@@ -155,10 +155,10 @@ class CheckTypeVisitor:
                 if not tree.check_variance(t, expr):
                     errors.append("Type mistmatch with variable '%s'" % node.variable_info.name)
                 node.variable_info.type = t
-                node.variable_info.vmholder = expr
+                #node.variable_info.vmholder = expr
         else:
             node.variable_info.type = t
-            node.variable_info.vmholder = 0
+            #node.variable_info.vmholder = 0
 
         node.type =  node.variable_info.type
         return node.variable_info.type
