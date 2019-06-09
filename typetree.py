@@ -12,6 +12,7 @@ class MethodType:
         self.param_types = param_types
         self.cil_name = ""
 
+# TODO Built-in methods for types. Boxing/Unboxing for Object type
 class TypeTree:
     def __init__(self):
         obj_type = ClassType("Object", None, [])
