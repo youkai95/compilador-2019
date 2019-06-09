@@ -53,8 +53,10 @@ class CheckSemanticsVisitor:
         # if not scope.is_defined(vname):
         #     errors.append('Variable \'%s\' not defined.' % (vname))
         #     return ERROR
-        scope.define_variable(vname)
         node.variable_info = scope.get_variable_info(vname)
+        if node.variable_info is None:
+            node.variable_info = scope.define_variable(vname)
+
         return rtype
 
     @visitor.when(ast.NotNode)

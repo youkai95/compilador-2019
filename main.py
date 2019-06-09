@@ -6,6 +6,7 @@ import ast_hierarchy as ast
 import logging
 
 from checktype import CheckTypeVisitor
+from cilwriter import CILWriterVisitor
 from cool_to_cil import COOLToCILVisitor
 from scope import Scope
 from typevisitor import CheckTypeVisitor_1st, CheckTypeVisitor_2nd
@@ -393,17 +394,19 @@ v = parser.parse('''
 class A inherits B {
     a : Int <- -(6+ 9);
     c(a : Int, b : String, c : A) : String {
-        new B
+        (new B).f()
     };
 };
 class B {
     v : String <- "asdasd";
     w : Int <- 30;
-    d(b : Int, c : String, q : A) : Int {
+    d(b : Int, c : String, q : B) : Int {
         {
-            v <- c;
-            a <- v;
-            a;
+            if v = "123" then
+                q <- new A
+            else
+                q <- new B
+            fi;
         }
     };
     
@@ -457,4 +460,7 @@ if not is_ok:
 # CIL GENERATION
 cil = COOLToCILVisitor()
 a = cil.visit(v, type_tree)
-print(a)
+
+writer = CILWriterVisitor()
+writer.visit(a)
+print()
