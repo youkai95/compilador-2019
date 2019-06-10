@@ -145,10 +145,15 @@ class COOLToCILVisitor:
     def visit(self, node:ast.DeclarationNode, type_tree):
         if node.expr:
             ret_val = self.visit(node.expr, type_tree)
-            node.variable_info = ret_val
+            if type(ret_val) is VariableInfo:
+                node.variable_info.name = ret_val.name
+                node.variable_info.vmholder = ret_val.vmholder
+            else:
+                node.variable_info.vmholder = ret_val
             return ret_val
         var = self.define_internal_local()
-        node.variable_info = var
+        node.variable_info.name = var.name
+        node.variable_info.vmholder = var.vmholder
         return var
 
     @visitor.when(ast.BlockNode)
@@ -171,8 +176,8 @@ class COOLToCILVisitor:
                 node.variable_info.vmholder = var.vmholder
                 self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
             else:
-                var = self.localvars[node.variable_info.vmholder].vinfo
-                node.variable_info.name = var.name
+                #var = self.localvars[node.variable_info.vmholder].vinfo
+                #node.variable_info.name = var.name
                 self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
 
         return node.variable_info
@@ -234,8 +239,13 @@ class COOLToCILVisitor:
         var = self.define_internal_local()
         self.instructions.append(cil.CILAllocateNode(node.type_token, var))
         t = type_tree.get_type(node.type_token)
-        for name, attr in t.attributes.items():
-            self.instructions.append(cil.CILSetAttribNode(var, name, self.visit(attr, type_tree)))
+        while t:
+            for name, attr in t.attributes.items():
+                decl = attr.decl
+                if decl.expr:
+                    self.instructions.append(cil.CILSetAttribNode(var, name, self.visit(decl.expr, type_tree)))
+
+            t = t.parent
         return var
 
     @visitor.when(ast.ClassNode)
@@ -363,7 +373,7 @@ class COOLToCILVisitor:
         r = self.define_internal_local()
         for i in range(len(ends)):
             self.instructions.append(ends[i])
-            e = self.visit(node.expresion_list[i], type_tree)
+            e = self.visit(node.expresion_list[i], type_tree, expr)
             self.instructions.append(cil.CILAssignNode(r, e))
             self.instructions.append(cil.CILGotoNode(end))
 
@@ -371,13 +381,13 @@ class COOLToCILVisitor:
         return r
 
     @visitor.when(ast.CaseItemNode)
-    def visit(self, node: ast.CaseItemNode, type_tree):
-        self.visit(node.variable, type_tree)
+    def visit(self, node: ast.CaseItemNode, type_tree, expr):
+        self.instructions.append(cil.CILAssignNode(self.visit(node.variable, type_tree), expr))
         return self.visit(node.expr, type_tree)
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node: ast.BooleanNode, type_tree):
-        return 1 if node.value == "true" else 0
+        return True if node.value == "true" else False
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode, type_tree):
@@ -393,18 +403,22 @@ class COOLToCILVisitor:
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node: ast.DispatchParentInstanceNode, type_tree:TypeTree):
         r = self.define_internal_local()
-        self.instructions.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        args = []
+        args.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
         for param in node.params:
-            self.instructions.append(cil.CILArgNode(self.visit(param, type_tree)))
+            args.append(cil.CILArgNode(self.visit(param, type_tree)))
+        self.instructions += args
         self.instructions.append(cil.CILDinamicCallNode(node.parent, node.method, r))
         return r
 
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node: ast.DispatchInstanceNode, type_tree):
         r = self.define_internal_local()
-        self.instructions.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        args = []
+        args.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
         for param in node.params:
-            self.instructions.append(cil.CILArgNode(self.visit(param, type_tree)))
+            args.append(cil.CILArgNode(self.visit(param, type_tree)))
+        self.instructions += args
         self.instructions.append(cil.CILDinamicCallNode(node.variable.type.name, node.method, r))
         return r
 

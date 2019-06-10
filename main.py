@@ -399,18 +399,20 @@ class A inherits B {
 };
 class B {
     v : String <- "asdasd";
-    w : Int <- 30;
+    w : Int;
     d(b : Int, c : String, q : B) : Int {
         {
             case q of
-                a : Int => a;
-                a : A => a;
+                a : Int => w;
+                a : A => v;
                 a : B => a;
             esac;
+            d(1, "caca", new A);
         }
     };
     
     f() : String {{
+        let x : String <- "culoroto", y : A in y.c(46, x, y);
         v <- "locota";
         d(5 + 9, v, new A);
         v;
