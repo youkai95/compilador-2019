@@ -114,7 +114,7 @@ class CILArrayNode(CILInstructionNode):
 
 class CILTypeOfNode(CILInstructionNode):
     def __init__(self, src, dst):
-        self.src = src
+        self.str = src
         self.dst = dst
 
 class CILLabelNode(CILInstructionNode):
@@ -154,17 +154,31 @@ class CILLoadNode(CILInstructionNode):
         self.dest = dest
         self.msg = msg
 
-class CILLengthNode(CILInstructionNode):
+#Object
+class CILAbortNode(CILInstructionNode):
     pass
 
+#String
+class CILLengthNode(CILInstructionNode):
+    def __init__(self, src, dest):
+        self.src = src
+        self.dest = dest
+
 class CILConcatNode(CILInstructionNode):
-    pass
+    def __init__(self, str, src, dest):
+        self.str = str
+        self.src = src
+        self.dest = dest
 
 class CILPrefixNode(CILInstructionNode):
     pass
 
 class CILSubstringNode(CILInstructionNode):
-    pass
+    def __init__(self, i, l, src, dest):
+        self.i = i
+        self.l = l
+        self.src = src
+        self.dest = dest
 
 class CILToStrNode(CILInstructionNode):
     def __init__(self, dest, ivalue):

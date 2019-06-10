@@ -61,7 +61,6 @@ class COOLToCILVisitor:
         self.selftype = vinfo
         return vinfo
 
-
     def build_type(self, type_info: ClassType, attrib, methods):
         if not type_info:
             return
@@ -76,6 +75,22 @@ class COOLToCILVisitor:
 
     def build_arg_name(self, fname, pname):
         return f"{fname}_{pname}"
+
+    def build_in_methods(self, name, a, node, cargs, m):
+        m.cil_name = name
+        instructions = []
+        self.localvars = []
+        l = self.define_internal_local()
+        args = []
+        for i in a:
+            args.append(cil.CILArgNode(i))
+
+        l = self.define_internal_local()
+        cargs = (*cargs, l)
+        instructions.append(node(*cargs))
+        instructions.append(cil.CILReturnNode(l))
+        self.dotcode.append(cil.CILFunctionNode(name, args, self.localvars, instructions))
+
     # ======================================================================
 
 
@@ -88,9 +103,16 @@ class COOLToCILVisitor:
         pass
 
     @visitor.when(ast.ProgramNode)
-    def visit(self, node:ast.ProgramNode, type_tree):
+    def visit(self, node:ast.ProgramNode, type_tree:TypeTree):
         for expr in node.expr:
             self.visit(expr, type_tree)
+
+        self.build_in_methods("substring", ["self", "i", "l"], cil.CILSubstringNode, ("self", "i", "j"), type_tree.get_type("String").methods("substring"))
+        self.build_in_methods("length", ["self"], cil.CILLengthNode, ("self",), type_tree.get_type("String").methods("length"))
+        self.build_in_methods("concat", ["self", "str"], cil.CILConcatNode, ("self", "str"), type_tree.get_type("String").methods("concat"))
+        self.build_in_methods("type_name", ["self"], cil.CILConcatNode, ("self",), type_tree.get_type("Object").methods("type_name"))
+        type_tree.get_type("Object").methods("abort").cil_name = "abort"
+        self.dotcode.append(cil.CILFunctionNode("abort", [cil.CILArgNode("self")], [], [cil.CILAbortNode("self")]))
         return cil.CILProgramNode(self.types, self.dotdata, self.dotcode)
 
     @visitor.when(ast.PlusNode)
@@ -438,4 +460,7 @@ class COOLToCILVisitor:
         self.instructions.append(r)
         return r
 
+    @visitor.when(ast.NotNode)
+    def visit(self, node: ast.NotNode, type_tree):
+        pass
     # ======================================================================
