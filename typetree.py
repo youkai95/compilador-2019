@@ -2,8 +2,8 @@ class ClassType:
     def __init__(self, name, parent=None, methods=None, attrb=None):
         self.name = name
         self.parent = parent
-        self.methods = methods
-        self.attributes = attrb
+        self.methods = methods if methods else {}
+        self.attributes = attrb if attrb else {}
 
 class MethodType:
     def __init__(self, name, rettype, param_types):
@@ -15,17 +15,19 @@ class MethodType:
 # TODO Built-in methods for types. Boxing/Unboxing for Object type
 class TypeTree:
     def __init__(self):
-        obj_type = ClassType("Object", None, [])
+        obj_type = ClassType("Object", None, {})
+        void = ClassType("Void", None)
         int_type = ClassType("Int", obj_type)
         string_type = ClassType("String", obj_type)
         bool_type = ClassType("Bool", obj_type)
-        io_type = ClassType("IO", obj_type, [])
+        io_type = ClassType("IO", obj_type, {})
         self.type_dict = {
             "Object": obj_type,
             "Int": int_type,
             "String": string_type,
             "Bool": bool_type,
-            "IO": io_type
+            "IO": io_type,
+            "Void": void
         }
 
     def check_inheritance(self, a: ClassType, b: ClassType):
