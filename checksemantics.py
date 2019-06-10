@@ -162,9 +162,9 @@ class CheckSemanticsVisitor:
 
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node, scope, errors):
-        if not scope.is_defined(node.variable.idx_token):
-            return ERROR
-        rtype = INTEGER
+        #if not scope.is_defined(node.variable.idx_token):
+        #    return ERROR
+        rtype = self.visit(node.variable, scope, errors) #INTEGER
         for p in node.params:
             rtype &= self.visit(p, scope, errors)
         return rtype
