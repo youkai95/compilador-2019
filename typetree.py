@@ -15,12 +15,20 @@ class MethodType:
 # TODO Built-in methods for types. Boxing/Unboxing for Object type
 class TypeTree:
     def __init__(self):
-        obj_type = ClassType("Object", None, {})
+        #MethodType("copy", "Self_Type", [])
+        obj_methods = {"abort" : MethodType("abort", "Object", []),
+                       "type_name" : MethodType("type_name", "String", [])}
+        obj_type = ClassType("Object", None, obj_methods)
         void = ClassType("Void", None)
         int_type = ClassType("Int", obj_type)
-        string_type = ClassType("String", obj_type)
+        string_methods = {"substring" : MethodType("substr", "String", ["Int", "Int"]),
+                          "length" : MethodType("length", "Int", []),
+                          "concat" : MethodType("concat", "String", ["String"])}
+        string_type = ClassType("String", "Object", string_methods)
         bool_type = ClassType("Bool", obj_type)
-        io_type = ClassType("IO", obj_type, {})
+        io_methods = {"in_string" : MethodType("in_string", "String", []),
+                      "in_int" : MethodType("in_int", "Int", [])}
+        io_type = ClassType("IO", "Object", io_methods)
         self.type_dict = {
             "Object": obj_type,
             "Int": int_type,
