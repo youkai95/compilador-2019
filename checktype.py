@@ -117,6 +117,7 @@ class CheckTypeVisitor:
 
     @visitor.when(ast.VariableNode)
     def visit(self, node, tree, errors):
+        node.type = node.variable_info.type
         return node.variable_info.type
 
     # TODO
@@ -185,14 +186,14 @@ class CheckTypeVisitor:
                     break
                 clss = clss.parent
         if not temp:
-            errors.append("TODO")
-            return
+            errors.append("Class '%s' doesnt contains method '%s'" % (clss.name, node.method))
+            return tree.get_type("Void")
         if len(temp.param_types) == len(node.expresion_list):
             for i in range(len(node.expresion_list)):
-                if self.visit(node.expresion_list[i], tree, errors).name != temp.param_types[i]:
-                    errors.append("TODO")
+                if not tree.check_variance(tree.get_type(temp.param_types[i]), self.visit(node.expresion_list[i], tree, errors)):
+                    errors.append("Incorrect parameter type")
         else:
-            errors.append("TODO")
+            errors.append("Incorrect number of parameters")
         t = tree.get_type(temp.ret_type)
         node.type = t
         return t
@@ -210,10 +211,11 @@ class CheckTypeVisitor:
             ctype = ctype.parent
         if not r:
             errors.append("Class '%s' doesnt contains method '%s'" % (var_type.name, node.method))
+            return tree.get_type("Void")
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if not tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
+                if not tree.check_variance(tree.get_type(r.param_types[i]), self.visit(node.params[i], tree, errors)):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
@@ -254,10 +256,11 @@ class CheckTypeVisitor:
 
         if not ctype:
             errors.append("Class '%s' isnt a '%s' parent" % (node.parent, var_type.name))
+            return tree.get_type("Void")
         if len(r.param_types) == len(node.params):
             for i in range(0, len(node.params)):
                 # TODO Check for specific types at parameters (varianza)
-                if not tree.check_variance(self.visit(node.params[i], tree, errors), tree.get_type(r.param_types[i])):
+                if not tree.check_variance(tree.get_type(r.param_types[i]), self.visit(node.params[i], tree, errors)):
                     errors.append("Incorrect parameter type")
         else:
             errors.append("Incorrect number of parameters")
