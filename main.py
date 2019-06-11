@@ -391,21 +391,22 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
-class A inherits B {
+class A {
     w : Int <- -(6+ 9);
     d(a : Int, b : String, c : B) : Int {
         80
     };
 };
-class B {
+class C inherits B {
+};
+class B inherits A {
     v : String <- "asdasd";
     w : Int;
     d(b : Int, c : String, q : B) : Int {
         {
             case q of
-                a : Int => w;
-                a : A => v;
-                a : B => a;
+                a : A => w;
+                a : C => a;
             esac;
             d(1, "caca", new A);
         }

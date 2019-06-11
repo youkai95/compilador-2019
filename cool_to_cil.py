@@ -386,7 +386,7 @@ class COOLToCILVisitor:
             labels.append(temp)
             tunels.append(t1)
             bases.append(t2)
-            check = cil.CILCHeckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr.type)
+            check = cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr)
             self.instructions.append(check)
             self.instructions.append(cil.CILGotoIfNode(checkr, temp))
         self.instructions.append(cil.CILErrorNode)
@@ -397,7 +397,7 @@ class COOLToCILVisitor:
             for j in range(i + 1, len(node.expresion_list)):
                 e1 = node.expresion_list[j].variable.type_token
                 e2 = node.expresion_list[i].variable.type_token
-                check = cil.CILCHeckHierarchy(checkr, e2, e1)
+                check = cil.CILCheckTypeHierarchy(checkr, e2, e1)
                 self.instructions.append(check)
                 self.instructions.append(cil.CILGotoIfNode(checkr, tunels[j]))
                 self.instructions.append(bases[j])
@@ -407,8 +407,8 @@ class COOLToCILVisitor:
 
         for i in range(0, len(tunels)):
             self.instructions.append(tunels[i])
-            v = cil.CILCHeckHierarchy(node.expresion_list[i].variable.type_token, expr.type)
-            self.instructions.append(cil.CILGotoIfNode(v, labels[i]))
+            self.instructions.append(cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr))
+            self.instructions.append(cil.CILGotoIfNode(checkr, labels[i]))
             self.instructions.append(cil.CILGotoNode(bases[i]))
 
         r = self.define_internal_local()

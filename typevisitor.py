@@ -15,7 +15,7 @@ class CheckTypeVisitor_1st:
         return t
 
     @visitor.when(ast.ClassNode)
-    def visit(self, node, types, errors):
+    def visit(self, node: ast.ClassNode, types, errors):
         methods = {}
         attrb = {}
         for p in node.cexpresion:
@@ -35,6 +35,12 @@ class CheckTypeVisitor_1st:
                 attrb[p.decl.idx_token] = p
         if node.idx_token in types.type_dict:
             errors.append("Error: Type %s already defined" % node.idx_token)
+            return 0
+        if node.idx_token == "String" or node.idx_token == "Int" or node.idx_token == "Bool":
+            errors.append("Type %s cannot be redefined" % node.idx_token)
+            return 0
+        if node.inherit_token == "String" or node.inherit_token == "Int" or node.inherit_token == "Bool":
+            errors.append("Cannot inherit from type %s" % node.inherit_token)
             return 0
         parent = types.type_dict["Object"]
         types.type_dict[node.idx_token] = typetree.ClassType(node.idx_token, parent, methods, attrb)
