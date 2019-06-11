@@ -48,6 +48,9 @@ class CheckTypeVisitor_2nd:
 
     @visitor.when(ast.ProgramNode)
     def visit(self, node, type, errors):
+        main = type.get_type("Main")
+        if not main or not "main" in main.methods:
+            errors.append("There is no entry point. Couldnt find Main.main().")
         for expr in node.expr:
             self.visit(expr, type, errors)
         return type
