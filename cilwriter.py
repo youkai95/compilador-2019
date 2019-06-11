@@ -6,10 +6,10 @@ class CILWriterVisitor(object):
         self.output = []
 
     def emit(self, msg):
-        self.output.append(msg)
+        self.output.append(msg + '\n')
 
     def black(self):
-        self.output.append('')
+        self.output.append('\n')
 
     def get_value(self, value):
         return value if isinstance(value, int) else value.name
@@ -113,13 +113,13 @@ class CILWriterVisitor(object):
     def visit(self, node:cil.CILGetAttribNode):
         dst = self.get_value(node.dest)
         objname = self.get_value(node.type_scr)
-        self.emit(f'{dst} = GETATTR {objname} {node.attr_addr}')
+        self.emit(f'    {dst} = GETATTR {objname} {node.attr_addr}')
 
     @visitor.when(cil.CILSetAttribNode)
     def visit(self, node:cil.CILSetAttribNode):
         val = self.get_value(node.value)
         typ = self.get_value(node.type_scr)
-        self.emit(f'SETATTR {typ} {node.attr_addr} {val}')
+        self.emit(f'    SETATTR {typ} {node.attr_addr} {val}')
 
     @visitor.when(cil.CILGetIndexNode)
     def visit(self, node:cil.CILGetIndexNode):
@@ -132,7 +132,7 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILAllocateNode)
     def visit(self, node:cil.CILAllocateNode):
         dst = self.get_value(node.dst)
-        self.emit(f"{dst} = ALLOCATE {node.alloc_type}")
+        self.emit(f"    {dst} = ALLOCATE {node.alloc_type}")
 
     @visitor.when(cil.CILArrayNode)
     def visit(self, node:cil.CILArrayNode):
@@ -141,20 +141,20 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILTypeOfNode)
     def visit(self, node:cil.CILTypeOfNode):
         val = self.get_value(node.src)
-        self.emit(f'{node.dst} = TYPEOF {val}')
+        self.emit(f'    {node.dst} = TYPEOF {val}')
 
     @visitor.when(cil.CILLabelNode)
     def visit(self, node:cil.CILLabelNode):
-        self.emit(f'LABEL {node.lname}')
+        self.emit(f'    LABEL {node.lname}')
 
     @visitor.when(cil.CILGotoNode)
     def visit(self, node:cil.CILGotoNode):
-        self.emit(f'GOTO {node.lname.lname}')
+        self.emit(f'    GOTO {node.lname.lname}')
 
     @visitor.when(cil.CILGotoIfNode)
     def visit(self, node:cil.CILGotoIfNode):
         val = self.get_value(node.conditional_value)
-        self.emit(f'GOTOIF {val} {node.lname.lname}')
+        self.emit(f'    GOTOIF {val} {node.lname.lname}')
 
     @visitor.when(cil.CILStaticCallNode)
     def visit(self, node:cil.CILStaticCallNode):
@@ -163,12 +163,12 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILDinamicCallNode)
     def visit(self, node:cil.CILDinamicCallNode):
         dest = self.get_value(node.dest_address)
-        self.emit(f'{dest} = VCALL {node.type_name} {node.func_name}')
+        self.emit(f'    {dest} = VCALL {node.type_name} {node.func_name}')
 
     @visitor.when(cil.CILArgNode)
     def visit(self, node:cil.CILArgNode):
         val = self.get_value(node.arg_name)
-        self.emit(f'ARG {val}')
+        self.emit(f'    ARG {val}')
 
     @visitor.when(cil.CILReturnNode)
     def visit(self, node:cil.CILReturnNode):
@@ -217,18 +217,18 @@ class CILWriterVisitor(object):
         var = self.get_value(node.dest)
         left = self.get_value(node.left)
         right = self.get_value(node.right)
-        self.emit(f'{var} = {left} == {right}')
+        self.emit(f'    {var} = {left} == {right}')
 
     @visitor.when(cil.CILLessThanNode)
     def visit(self, node: cil.CILEqualNode):
         var = self.get_value(node.dest)
         left = self.get_value(node.left)
         right = self.get_value(node.right)
-        self.emit(f'{var} = {left} < {right}')
+        self.emit(f'    {var} = {left} < {right}')
 
     @visitor.when(cil.CILLessEqualNode)
     def visit(self, node: cil.CILEqualNode):
         var = self.get_value(node.dest)
         left = self.get_value(node.left)
         right = self.get_value(node.right)
-        self.emit(f'{var} = {left} <= {right}')
+        self.emit(f'    {var} = {left} <= {right}')
