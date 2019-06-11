@@ -114,7 +114,7 @@ class CILArrayNode(CILInstructionNode):
 
 class CILTypeOfNode(CILInstructionNode):
     def __init__(self, src, dst):
-        self.str = src
+        self.src = src
         self.dst = dst
 
 class CILLabelNode(CILInstructionNode):
@@ -156,7 +156,8 @@ class CILLoadNode(CILInstructionNode):
 
 #Object
 class CILAbortNode(CILInstructionNode):
-    pass
+    def __init__(self, selftype):
+        self.selftype = selftype
 
 #String
 class CILLengthNode(CILInstructionNode):
