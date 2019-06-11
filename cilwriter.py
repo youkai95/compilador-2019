@@ -237,9 +237,8 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILCHeckHierarchy)
     def visit(self, node: cil.CILCHeckHierarchy):
         var = self.get_value(node.dest)
-        a = self.get_value(node.a)
         b = self.get_value(node.b)
-        self.emit(f'{var} = inherits {b} : {a}')
+        self.emit(f'{var} = INHERITS {b} {node.a}')
 
     @visitor.when(cil.CILErrorNode)
     def visit(self, node: cil.CILErrorNode):
