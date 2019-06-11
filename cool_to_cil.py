@@ -67,7 +67,7 @@ class COOLToCILVisitor:
         self.build_type(type_info.parent, attrib, methods)
         if type_info.methods:
             for name in type_info.methods:
-                type_info.methods[name].cil_name = f"{type_info.name}_{name}"
+                #type_info.methods[name].cil_name = f"{type_info.name}_{name}"
                 methods[name] = type_info.methods[name].cil_name
         if type_info.attributes:
             for name in type_info.attributes:
@@ -76,20 +76,25 @@ class COOLToCILVisitor:
     def build_arg_name(self, fname, pname):
         return f"{fname}_{pname}"
 
-    def build_in_methods(self, name, a, node, cargs, m):
-        m.cil_name = name
+    def build_in_methods(self, a, node, cargs, m):
+        #m.cil_name = name
         instructions = []
         self.localvars = []
         l = self.define_internal_local()
+
         args = []
+        variables = []
         for i in a:
-            args.append(cil.CILArgNode(i))
+            vinfo = VariableInfo(i)
+            variables.append(vinfo)
+            args.append(cil.CILArgNode(vinfo))
 
         l = self.define_internal_local()
-        cargs = (*cargs, l)
+        variables.append(l)
+        cargs = tuple(variables)
         instructions.append(node(*cargs))
         instructions.append(cil.CILReturnNode(l))
-        self.dotcode.append(cil.CILFunctionNode(name, args, self.localvars, instructions))
+        self.dotcode.append(cil.CILFunctionNode(m.cil_name, args, self.localvars, instructions))
 
     # ======================================================================
 
@@ -107,12 +112,13 @@ class COOLToCILVisitor:
         for expr in node.expr:
             self.visit(expr, type_tree)
 
-        self.build_in_methods("substring", ["self", "i", "l"], cil.CILSubstringNode, ("self", "i", "j"), type_tree.get_type("String").methods("substring"))
-        self.build_in_methods("length", ["self"], cil.CILLengthNode, ("self",), type_tree.get_type("String").methods("length"))
-        self.build_in_methods("concat", ["self", "str"], cil.CILConcatNode, ("self", "str"), type_tree.get_type("String").methods("concat"))
-        self.build_in_methods("type_name", ["self"], cil.CILConcatNode, ("self",), type_tree.get_type("Object").methods("type_name"))
-        type_tree.get_type("Object").methods("abort").cil_name = "abort"
-        self.dotcode.append(cil.CILFunctionNode("abort", [cil.CILArgNode("self")], [], [cil.CILAbortNode("self")]))
+        self.build_in_methods(["self", "i", "l"], cil.CILSubstringNode, ("self", "i", "j"), type_tree.get_type("String").methods["substring"])
+        self.build_in_methods(["self"], cil.CILLengthNode, ("self",), type_tree.get_type("String").methods["length"])
+        self.build_in_methods(["self", "str"], cil.CILConcatNode, ("self", "str"), type_tree.get_type("String").methods["concat"])
+        self.build_in_methods(["self"], cil.CILTypeOfNode, ("self",), type_tree.get_type("Object").methods["type_name"])
+        #type_tree.get_type("Object").methods["abort"].cil_name = "abort"
+        selfvar = VariableInfo("self")
+        self.dotcode.append(cil.CILFunctionNode(type_tree.get_type("Object").methods["abort"].cil_name, [cil.CILArgNode(selfvar)], [], [cil.CILAbortNode(selfvar)]))
         return cil.CILProgramNode(self.types, self.dotdata, self.dotcode)
 
     @visitor.when(ast.PlusNode)
