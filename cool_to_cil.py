@@ -476,11 +476,9 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.NotNode)
     def visit(self, node: ast.NotNode, type_tree):
-        r = cil.CILNotNode(self.visit(node.expr, type_tree))
+        var = self.define_internal_local()
+        r = cil.CILNotNode(self.visit(node.expr, type_tree), var)
         self.instructions.append(r)
-        return r
+        return var
 
-    @visitor.when(ast.NotNode)
-    def visit(self, node: ast.NotNode, type_tree):
-        pass
     # ======================================================================

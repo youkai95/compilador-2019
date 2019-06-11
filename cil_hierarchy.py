@@ -80,8 +80,9 @@ class CILGetAttribNode(CILInstructionNode):
         self.dest = dest
 
 class CILNotNode(CILInstructionNode):
-    def __init__(self, expr):
+    def __init__(self, expr, dst):
         self.expr = expr
+        self.dst = dst
 
 class CILErrorNode(CILInstructionNode):
     pass
