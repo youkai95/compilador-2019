@@ -1,0 +1,212 @@
+.TYPES
+TYPE A {
+attribute v;
+attribute w;
+attribute w;
+method abort : Object_abort;
+method type_name : Object_type_name;
+method d : A_d;
+method f : B_f;
+}
+TYPE B {
+attribute v;
+attribute w;
+method abort : Object_abort;
+method type_name : Object_type_name;
+method d : B_d;
+method f : B_f;
+}
+TYPE Main {
+attribute main;
+method abort : Object_abort;
+method type_name : Object_type_name;
+method main : Main_main;
+}
+
+.DATA
+data_0 = "caca"
+data_1 = "asdasd"
+data_2 = "culoroto"
+data_3 = "locota"
+data_4 = "asdasd"
+data_5 = "asdasd"
+
+.CODE
+
+function A_d {
+    ARG self
+    ARG d_a
+    ARG d_b
+    ARG d_c
+
+    RETURN 80
+}
+
+function B_d {
+    ARG self
+    ARG d_b
+    ARG d_c
+    ARG d_q
+
+    LOCAL 0_B_d_internal
+    LOCAL 1_B_d_internal
+    LOCAL 2_B_d_internal
+    LOCAL 3_B_d_internal
+    LOCAL 4_B_d_internal
+    LOCAL 5_B_d_internal
+    LOCAL 6_B_d_internal
+    LOCAL 7_B_d_internal
+    LOCAL 8_B_d_internal
+    LOCAL 9_B_d_internal
+    LOCAL 10_B_d_internal
+    LOCAL 11_B_d_internal
+    LOCAL 12_B_d_internal
+    LOCAL 13_B_d_internal
+    LOCAL 14_B_d_internal
+
+    GOTOIF 1_B_d_internal label_2
+    GOTOIF 1_B_d_internal label_3
+    GOTOIF 1_B_d_internal label_4
+    GOTO label_1
+    LABEL label_2
+    GOTOIF 1_B_d_internal label_3
+    GOTOIF 1_B_d_internal label_4
+    GOTO label_5
+    LABEL label_3
+    GOTOIF 1_B_d_internal label_4
+    GOTO label_6
+    LABEL label_4
+    GOTO label_7
+    LABEL label_5
+    3_B_d_internal = d_q
+    4_B_d_internal = GETATTR self w
+    2_B_d_internal = 4_B_d_internal
+    GOTO label_1
+    LABEL label_6
+    5_B_d_internal = d_q
+    6_B_d_internal = GETATTR self v
+    2_B_d_internal = 6_B_d_internal
+    GOTO label_1
+    LABEL label_7
+    7_B_d_internal = d_q
+    2_B_d_internal = 7_B_d_internal
+    GOTO label_1
+    LABEL label_1
+    10_B_d_internal = LOAD data_0
+    11_B_d_internal = ALLOCATE A
+    12_B_d_internal = 6 + 9
+    13_B_d_internal = 0 - 12_B_d_internal
+    SETATTR 11_B_d_internal w 13_B_d_internal
+    14_B_d_internal = LOAD data_1
+    SETATTR 11_B_d_internal v 14_B_d_internal
+    ARG self
+    ARG 1
+    ARG 10_B_d_internal
+    ARG 11_B_d_internal
+    9_B_d_internal = VCALL B d
+    RETURN 9_B_d_internal
+}
+
+function B_f {
+    ARG self
+
+    LOCAL 15_B_f_internal
+    LOCAL 16_B_f_internal
+    LOCAL 17_B_f_internal
+    LOCAL 18_B_f_internal
+    LOCAL 19_B_f_internal
+    LOCAL 20_B_f_internal
+    LOCAL 21_B_f_internal
+    LOCAL 22_B_f_internal
+    LOCAL 23_B_f_internal
+    LOCAL 24_B_f_internal
+    LOCAL 25_B_f_internal
+    LOCAL 26_B_f_internal
+    LOCAL 27_B_f_internal
+    LOCAL 28_B_f_internal
+    LOCAL 29_B_f_internal
+
+    15_B_f_internal = LOAD data_2
+    ARG 16_B_f_internal
+    ARG 46
+    ARG 15_B_f_internal
+    ARG 16_B_f_internal
+    17_B_f_internal = VCALL A c
+    21_B_f_internal = LOAD data_3
+    SETATTR self v 21_B_f_internal
+    23_B_f_internal = 5 + 9
+    24_B_f_internal = GETATTR self v
+    25_B_f_internal = ALLOCATE A
+    26_B_f_internal = 6 + 9
+    27_B_f_internal = 0 - 26_B_f_internal
+    SETATTR 25_B_f_internal w 27_B_f_internal
+    28_B_f_internal = LOAD data_4
+    SETATTR 25_B_f_internal v 28_B_f_internal
+    ARG self
+    ARG 23_B_f_internal
+    ARG 24_B_f_internal
+    ARG 25_B_f_internal
+    22_B_f_internal = VCALL B d
+    29_B_f_internal = GETATTR self v
+    RETURN 29_B_f_internal
+}
+
+function Main_main {
+    ARG self
+
+    LOCAL 30_Main_main_internal
+    LOCAL 31_Main_main_internal
+    LOCAL 32_Main_main_internal
+
+    31_Main_main_internal = ALLOCATE B
+    32_Main_main_internal = LOAD data_5
+    SETATTR 31_Main_main_internal v 32_Main_main_internal
+    ARG 31_Main_main_internal
+    30_Main_main_internal = VCALL B f
+    RETURN 30_Main_main_internal
+}
+
+function String_substring {
+    ARG self
+    ARG i
+    ARG l
+
+    LOCAL 33_Main_main_internal
+    LOCAL 34_Main_main_internal
+
+    RETURN 34_Main_main_internal
+}
+
+function String_length {
+    ARG self
+
+    LOCAL 35_Main_main_internal
+    LOCAL 36_Main_main_internal
+
+    RETURN 36_Main_main_internal
+}
+
+function String_concat {
+    ARG self
+    ARG str
+
+    LOCAL 37_Main_main_internal
+    LOCAL 38_Main_main_internal
+
+    RETURN 38_Main_main_internal
+}
+
+function Object_type_name {
+    ARG self
+
+    LOCAL 39_Main_main_internal
+    LOCAL 40_Main_main_internal
+
+    <scope.VariableInfo object at 0x0000019BF59DD278> = TYPEOF self
+    RETURN 40_Main_main_internal
+}
+
+function Object_abort {
+    ARG self
+
+}

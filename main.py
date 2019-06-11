@@ -392,9 +392,9 @@ parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class A inherits B {
-    a : Int <- -(6+ 9);
-    c(a : Int, b : String, c : A) : String {
-        (new B).f()
+    w : Int <- -(6+ 9);
+    d(a : Int, b : String, c : B) : Int {
+        80
     };
 };
 class B {
@@ -417,6 +417,12 @@ class B {
         d(5 + 9, v, new A);
         v;
     }};
+};
+class Main {
+    main : Int;
+    main() : String {
+        (new B).f()
+    };
 };
 ''', lexer=l)
 
@@ -465,4 +471,9 @@ a = cil.visit(v, type_tree)
 
 writer = CILWriterVisitor()
 writer.visit(a)
+
+file = open("output.cil", 'w')
+file.writelines(writer.output)
+file.close()
+
 print()
