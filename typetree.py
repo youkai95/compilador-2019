@@ -4,6 +4,11 @@ class ClassType:
         self.parent = parent
         self.methods = methods if methods else {}
         self.attributes = attrb if attrb else {}
+        self.generate_cil_names()
+
+    def generate_cil_names(self):
+        for name, method in self.methods.items():
+            method.cil_name = f'{self.name}_{name}'
 
 class MethodType:
     def __init__(self, name, rettype, param_types):
@@ -19,16 +24,21 @@ class TypeTree:
         obj_methods = {"abort" : MethodType("abort", "Object", []),
                        "type_name" : MethodType("type_name", "String", [])}
         obj_type = ClassType("Object", None, obj_methods)
+
         void = ClassType("Void", None)
+
         int_type = ClassType("Int", obj_type)
+
         string_methods = {"substring" : MethodType("substr", "String", ["Int", "Int"]),
                           "length" : MethodType("length", "Int", []),
                           "concat" : MethodType("concat", "String", ["String"])}
-        string_type = ClassType("String", "Object", string_methods)
+        string_type = ClassType("String", obj_type, string_methods)
+
         bool_type = ClassType("Bool", obj_type)
+
         io_methods = {"in_string" : MethodType("in_string", "String", []),
                       "in_int" : MethodType("in_int", "Int", [])}
-        io_type = ClassType("IO", "Object", io_methods)
+        io_type = ClassType("IO", obj_type, io_methods)
         self.type_dict = {
             "Object": obj_type,
             "Int": int_type,
