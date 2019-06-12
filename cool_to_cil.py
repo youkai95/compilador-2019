@@ -312,10 +312,10 @@ class COOLToCILVisitor:
         self.instructions = []
         self.localvars = []
         self.arguments.clear()
-        args = [cil.CILArgNode(self.define_selftype())]
+        args = [cil.CILParamNode(self.define_selftype())]
         for param in node.params:
             name = self.build_arg_name(node.name, param.idx_token)
-            args.append(cil.CILArgNode(param.variable_info))
+            args.append(cil.CILParamNode(param.variable_info))
             param.variable_info.name = name
             self.arguments.append(param.variable_info)
 

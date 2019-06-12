@@ -8,6 +8,7 @@ import logging
 from checktype import CheckTypeVisitor
 from cilwriter import CILWriterVisitor
 from cool_to_cil import COOLToCILVisitor
+from mipswriter import MIPSWriterVisitor
 from scope import Scope
 from typevisitor import CheckTypeVisitor_1st, CheckTypeVisitor_2nd
 
@@ -470,7 +471,7 @@ if not is_ok:
 cil = COOLToCILVisitor()
 a = cil.visit(v, type_tree)
 
-writer = CILWriterVisitor()
+writer = MIPSWriterVisitor()
 writer.visit(a)
 
 file = open("output.cil", 'w')

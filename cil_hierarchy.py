@@ -26,7 +26,8 @@ class CILFunctionNode(CILNode):
         self.instructions = instructions
 
 class CILParamNode(CILNode):
-    pass
+    def __init__(self, param_name):
+        self.param_name = param_name
 
 class CILLocalNode(CILNode):
     def __init__(self, vinfo):
