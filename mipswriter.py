@@ -1,9 +1,12 @@
 import cil_hierarchy as cil
 import visitor
 
-class CILWriterVisitor(object):
+class MIPSWriterVisitor(object):
     def __init__(self):
         self.output = []
+        self.sp = 0
+        self.gp = 0
+        self.args = []
 
     def emit(self, msg):
         self.output.append(msg + '\n')
@@ -25,12 +28,12 @@ class CILWriterVisitor(object):
             self.visit(x)
         self.black()
 
-        self.emit('.DATA')
+        self.emit('.data')
         for x in node.dotdata:
             self.visit(x)
         self.black()
 
-        self.emit('.CODE')
+        self.emit('.text')
         for x in node.dotcode:
             self.visit(x)
 
@@ -52,11 +55,15 @@ class CILWriterVisitor(object):
     def visit(self, node:cil.CILFunctionNode):
         self.black()
 
-        self.emit(f'function {node.fname} {{')
+        self.emit(f'{node.fname}:')
+
         for x in node.params:
             self.visit(x)
         if node.params:
             self.black()
+
+        sp = len(node.localvars) * 4
+        self.emit(f'    subu $sp, $sp, {sp}')
 
         for x in node.localvars:
             self.visit(x)
@@ -65,7 +72,8 @@ class CILWriterVisitor(object):
 
         for x in node.instructions:
             self.visit(x)
-        self.emit('}')
+
+        self.emit(f'    addu $sp, $sp, {sp}')
 
     @visitor.when(cil.CILParamNode)
     def visit(self, node:cil.CILParamNode):
@@ -73,13 +81,15 @@ class CILWriterVisitor(object):
 
     @visitor.when(cil.CILLocalNode)
     def visit(self, node:cil.CILLocalNode):
-        self.emit(f'    LOCAL {node.vinfo.name}')
+        self.emit(f'    li $t1, 0')
+        self.emit(f'    sw $t1, {self.sp}($sp)')
+        node.vinfo.vmholder = self.sp
+        self.sp += 4
 
     @visitor.when(cil.CILAssignNode)
     def visit(self, node:cil.CILAssignNode):
-        dest = node.dest.name
-        source = self.get_value(node.source)
-        self.emit(f'    {dest} = {source}')
+        self.emit(f'    lw $t1 {node.source.vinfo.vmholder}($sp)')
+        self.emit(f'    sw $t1 {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILPlusNode)
     def visit(self, node:cil.CILPlusNode):
@@ -168,6 +178,7 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILArgNode)
     def visit(self, node:cil.CILArgNode):
         val = self.get_value(node.arg_name)
+        self.args.append(val)
         self.emit(f'    ARG {val}')
 
     @visitor.when(cil.CILReturnNode)
