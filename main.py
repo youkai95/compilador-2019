@@ -471,7 +471,7 @@ if not is_ok:
 cil = COOLToCILVisitor()
 a = cil.visit(v, type_tree)
 
-writer = MIPSWriterVisitor()
+writer = CILWriterVisitor()
 writer.visit(a)
 
 file = open("output.cil", 'w')

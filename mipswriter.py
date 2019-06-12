@@ -62,6 +62,7 @@ class MIPSWriterVisitor(object):
         if node.params:
             self.black()
 
+        self.sp = 0
         sp = len(node.localvars) * 4
         self.emit(f'    subu $sp, $sp, {sp}')
 
@@ -77,6 +78,7 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILParamNode)
     def visit(self, node:cil.CILParamNode):
+
         pass
 
     @visitor.when(cil.CILLocalNode)
