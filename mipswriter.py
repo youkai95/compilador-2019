@@ -244,7 +244,6 @@ class MIPSWriterVisitor(object):
         right = self.get_value(node.right)
         self.emit(f'    {var} = {left} <= {right}')
 
-
     @visitor.when(cil.CILCheckHierarchy)
     def visit(self, node: cil.CILCheckHierarchy):
         var = self.get_value(node.dest)
