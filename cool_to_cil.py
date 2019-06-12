@@ -109,6 +109,9 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.ProgramNode)
     def visit(self, node:ast.ProgramNode, type_tree:TypeTree):
+        n = cil.CILAllocateNode("Main", self.define_internal_local())
+        m = ast.MethodNode("main",[], "Int", ast.DispatchInstanceNode(n.dst, "main", []))
+        self.visit(m, type_tree)
         for expr in node.expr:
             self.visit(expr, type_tree)
 
