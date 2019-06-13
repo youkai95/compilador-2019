@@ -12,6 +12,7 @@ class CILTypeNode(CILNode):
         self.name = name
         self.attributes = attributes
         self.methods = methods
+        self.pos = 0
 
 class CILDataNode(CILNode):
     def __init__(self, vname, value):
@@ -139,7 +140,8 @@ class CILGotoIfNode(CILInstructionNode):
         self.lname = lname
 
 class CILStaticCallNode(CILInstructionNode):
-    def __init__(self, func_name, dest_addr):
+    def __init__(self, type_name, func_name, dest_addr):
+        self.type_name = type_name
         self.func_name = func_name
         self.dest_address = dest_addr
 
