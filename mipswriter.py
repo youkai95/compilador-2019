@@ -80,6 +80,23 @@ class MIPSWriterVisitor(object):
         self.emit(f'    sb $t1, ($a2)')
         self.emit(f'    j $ra')
 
+    def substring(self):
+        self.emit(f'substring:')
+        self.emit(f'    xor $t1, $t1, $t1') #cero
+        self.emit(f'    add $a0, $a0, a1')
+        self.emit(f'write_substring:')
+        self.emit(f'    lb $t0, ($a0)')
+        self.emit(f'    beq $a2, $t1, end_substring')
+        self.emit(f'    sb $t0, ($a3)')
+        self.emit(f'    add $a0, $a0, 1')
+        self.emit(f'    add $a3, $a3, 1')
+        self.emit(f'    subu $a2, $a2, 1')
+        self.emit(f'    j write_substring')
+        self.emit(f'end_substring:')
+        self.emit(f'    sb $t1, ($a3)')
+        self.emit(f'    j $ra')
+
+
     @visitor.on('node')
     def visit(self, node):
         pass
@@ -394,13 +411,39 @@ class MIPSWriterVisitor(object):
         self.emit(f'    addu $sp, $sp, 4')
         self.emit(f'    sw  $v0, {node.dest.vinfo.vmholder}($sp)')
 
-    @visitor.when(cil.CILPrefixNode)
-    def visit(self, node:cil.CILPrefixNode):
-        pass
+    # @visitor.when(cil.CILPrefixNode)
+    # def visit(self, node:cil.CILPrefixNode):
+    #     pass
 
     @visitor.when(cil.CILSubstringNode)
     def visit(self, node:cil.CILSubstringNode):
-        pass
+        self.emit(f'    la $a0, {node.src.vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal lenght')
+        self.lenght()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    li $t0, {node.i}')
+        self.emit(f'    blt $t0, 0, error')
+        self.emit(f'    li $t1, {node.l}')
+        self.emit(f'    blt $t1, 0, error')
+        self.emit(f'    add $t0, $t0, $t1')
+        self.emit(f'    blt $v0, $t0, error')
+        self.emit(f'    li $v0, 9')
+        self.emit(f'    li $a0, {node.l}')
+        self.emit(f'    syscall')
+        self.emit(f'    la $a3, $v0')
+        self.emit(f'    la $a0, {node.src.vmholder}($sp)')
+        self.emit(f'    li $a1, {node.i}')
+        self.emit(f'    li $a2, {node.l}')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal substring')
+        self.substring()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    sw  $v0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILToStrNode)
     def visit(self, node:cil.CILToStrNode):
@@ -466,6 +509,7 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILErrorNode)
     def visit(self, node: cil.CILErrorNode):
+        self.emit(f'    error:')
         self.emit(f'    break 0')
 
     @visitor.when(cil.CILNotNode)
