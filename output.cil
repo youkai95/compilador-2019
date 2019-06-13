@@ -1,216 +1,322 @@
-.TYPES
-TYPE A {
-attribute w;
-method abort : Object_abort;
-method type_name : Object_type_name;
-method d : A_d;
-}
-TYPE C {
-attribute w;
-attribute v;
-attribute w;
-method abort : Object_abort;
-method type_name : Object_type_name;
-method d : B_d;
-method f : B_f;
-}
-TYPE B {
-attribute w;
-attribute v;
-attribute w;
-method abort : Object_abort;
-method type_name : Object_type_name;
-method d : B_d;
-method f : B_f;
-}
-TYPE Main {
-attribute main;
-method abort : Object_abort;
-method type_name : Object_type_name;
-method main : Main_main;
-}
+.data
+data_0: .asciiz "asd"
+data_1: .asciiz ""
+Object: .asciiz "Object"
+Int: .asciiz "Int"
+String: .asciiz "String"
+Bool: .asciiz "Bool"
+IO: .asciiz "IO"
+Void: .asciiz "Void"
+A: .asciiz "A"
+B: .asciiz "B"
+Main: .asciiz "Main"
 
-.DATA
-data_0 = "caca"
-data_1 = "culoroto"
-data_2 = "locota"
-data_3 = "asdasd"
+.text
+    li $v0, 9
+    li $a0, 160
+    syscall
+    sw $v0, ($gp)
+    lw $t0, ($gp)
+    la $t1, A
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    la $t2, A_d
+    sw $t2, 16($t0)
+    add $t0, $t0, 20
+    la $t1, B
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    la $t2, B_d
+    sw $t2, 16($t0)
+    add $t0, $t0, 20
+    la $t1, Main
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    la $t2, Main_main
+    sw $t2, 16($t0)
+    add $t0, $t0, 20
+    la $t1, Object
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    add $t0, $t0, 16
+    la $t1, Int
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    add $t0, $t0, 16
+    la $t1, String
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    la $t2, String_substring
+    sw $t2, 16($t0)
+    la $t2, String_length
+    sw $t2, 20($t0)
+    la $t2, String_concat
+    sw $t2, 24($t0)
+    add $t0, $t0, 28
+    la $t1, Bool
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    add $t0, $t0, 16
+    la $t1, IO
+    sw $t1, 4($t0)
+    la $t2, Object_abort
+    sw $t2, 8($t0)
+    la $t2, Object_type_name
+    sw $t2, 12($t0)
+    la $t2, IO_in_string
+    sw $t2, 16($t0)
+    la $t2, IO_in_int
+    sw $t2, 20($t0)
+    add $t0, $t0, 24
+    lw $t0, ($gp)
+    lw $t2, ($gp)
+    li $t1, 20
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 20
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 20
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 20
+    li $t1, 0
+    sw $t1, ($t0)
+    add $t0, $t0, 16
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 16
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 28
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 16
+    li $t1, 60
+    add $t1, $t1, $t2
+    sw $t1, ($t0)
+    add $t0, $t0, 24
 
-.CODE
+entry:
 
-function A_d {
-    ARG self
-    ARG d_a
-    ARG d_b
-    ARG d_c
+    subu $sp, $sp, 8
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
 
-    RETURN 80
-}
+    li $a0, 8
+    li $v0, 9
+    syscall
+    sw $v0, 4($sp)
+    lw $t0, ($gp)
+    la $t1, 40($t0)
+    sw $t1, ($v0)
+    SETATTR 4 main 95
+    lw $t1, 4($sp)
+    subu $sp, $sp, 8
+    sw $ra, 4($sp)
+    lw $t0, 12($sp)
+    sw $t0, 0($sp)
+    lw $t1, ($t1)
+    lw $t0, 16($t1)
+    jr $t0
+    lw $ra, 4($sp)
+    addu $sp, $sp, 8
+    sw $v0, 0($sp)
+    lw $v0, 0($sp)
+    addu $sp, $sp, 8
+    jr $ra
 
-function B_d {
-    ARG self
-    ARG d_b
-    ARG d_c
-    ARG d_q
+A_d:
 
-    LOCAL 0_B_d_internal
-    LOCAL 1_B_d_internal
-    LOCAL 2_B_d_internal
-    LOCAL 3_B_d_internal
-    LOCAL 4_B_d_internal
-    LOCAL 5_B_d_internal
-    LOCAL 6_B_d_internal
-    LOCAL 7_B_d_internal
-    LOCAL 8_B_d_internal
-    LOCAL 9_B_d_internal
-    LOCAL 10_B_d_internal
-    LOCAL 11_B_d_internal
+    subu $sp, $sp, 20
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
+    li $t0, 0
+    sw $t0, 8($sp)
+    li $t0, 0
+    sw $t0, 12($sp)
+    li $t0, 0
+    sw $t0, 16($sp)
 
-    1_B_d_internal = INHERITS d_q A
-    GOTOIF 1_B_d_internal label_2
-    1_B_d_internal = INHERITS d_q C
-    GOTOIF 1_B_d_internal label_5
-    GOTO label_1
-    LABEL label_2
-    1_B_d_internal = TYPE_INHERITS C A
-    GOTOIF 1_B_d_internal label_6
-    LABEL label_7
-    GOTO label_8
-    LABEL label_5
-    GOTO label_9
-    LABEL label_3
-    1_B_d_internal = INHERITS d_q A
-    GOTOIF 1_B_d_internal label_2
-    GOTO label_4
-    LABEL label_6
-    1_B_d_internal = INHERITS d_q C
-    GOTOIF 1_B_d_internal label_5
-    GOTO label_7
-    LABEL label_8
-    3_B_d_internal = d_q
-    4_B_d_internal = GETATTR self w
-    2_B_d_internal = 4_B_d_internal
-    GOTO label_1
-    LABEL label_9
-    5_B_d_internal = d_q
-    2_B_d_internal = 5_B_d_internal
-    GOTO label_1
-    LABEL label_1
-    8_B_d_internal = LOAD data_0
-    9_B_d_internal = ALLOCATE A
-    10_B_d_internal = 6 + 9
-    11_B_d_internal = 0 - 10_B_d_internal
-    SETATTR 9_B_d_internal w 11_B_d_internal
-    ARG self
-    ARG 1
-    ARG 8_B_d_internal
-    ARG 9_B_d_internal
-    7_B_d_internal = VCALL B d
-    RETURN 7_B_d_internal
-}
+    li $a0, 8
+    li $v0, 9
+    syscall
+    sw $v0, 0($sp)
+    lw $t0, ($gp)
+    la $t1, 0($t0)
+    sw $t1, ($v0)
+    SETATTR 16 j 0
+    8 = GETATTR 16 j
+    lw $t0, data_0
+    sw $t0, 12($sp)
+    li $a0, 4
+    li $v0, 9
+    syscall
+    sw $v0, 16($sp)
+    lw $t0, ($gp)
+    la $t1, 20($t0)
+    sw $t1, ($v0)
+    lw $t1, 8($sp)
+    subu $sp, $sp, 20
+    sw $ra, 16($sp)
+    lw $t0, 28($sp)
+    sw $t0, 0($sp)
+    lw $t0, 5
+    sw $t0, 4($sp)
+    lw $t0, 32($sp)
+    sw $t0, 8($sp)
+    lw $t0, 36($sp)
+    sw $t0, 12($sp)
+    lw $t1, ($t1)
+    lw $t0, 16($t1)
+    jr $t0
+    lw $ra, 16($sp)
+    addu $sp, $sp, 20
+    sw $v0, 4($sp)
+    lw $v0, 4($sp)
+    addu $sp, $sp, 20
+    jr $ra
 
-function B_f {
-    ARG self
+B_d:
 
-    LOCAL 12_B_f_internal
-    LOCAL 13_B_f_internal
-    LOCAL 14_B_f_internal
-    LOCAL 15_B_f_internal
-    LOCAL 16_B_f_internal
-    LOCAL 17_B_f_internal
-    LOCAL 18_B_f_internal
-    LOCAL 19_B_f_internal
-    LOCAL 20_B_f_internal
-    LOCAL 21_B_f_internal
-    LOCAL 22_B_f_internal
-    LOCAL 23_B_f_internal
-    LOCAL 24_B_f_internal
-    LOCAL 25_B_f_internal
+    subu $sp, $sp, 0
+    li $v0, 98
+    addu $sp, $sp, 0
+    jr $ra
 
-    12_B_f_internal = LOAD data_1
-    ARG 13_B_f_internal
-    ARG 46
-    ARG 12_B_f_internal
-    ARG 13_B_f_internal
-    14_B_f_internal = VCALL A c
-    18_B_f_internal = LOAD data_2
-    SETATTR self v 18_B_f_internal
-    20_B_f_internal = 5 + 9
-    21_B_f_internal = GETATTR self v
-    22_B_f_internal = ALLOCATE A
-    23_B_f_internal = 6 + 9
-    24_B_f_internal = 0 - 23_B_f_internal
-    SETATTR 22_B_f_internal w 24_B_f_internal
-    ARG self
-    ARG 20_B_f_internal
-    ARG 21_B_f_internal
-    ARG 22_B_f_internal
-    19_B_f_internal = VCALL B d
-    25_B_f_internal = GETATTR self v
-    RETURN 25_B_f_internal
-}
+Main_main:
 
-function Main_main {
-    ARG self
+    subu $sp, $sp, 20
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
+    li $t0, 0
+    sw $t0, 8($sp)
+    li $t0, 0
+    sw $t0, 12($sp)
+    li $t0, 0
+    sw $t0, 16($sp)
 
-    LOCAL 26_Main_main_internal
-    LOCAL 27_Main_main_internal
-    LOCAL 28_Main_main_internal
-    LOCAL 29_Main_main_internal
-    LOCAL 30_Main_main_internal
+    li $a0, 8
+    li $v0, 9
+    syscall
+    sw $v0, 4($sp)
+    lw $t0, ($gp)
+    la $t1, 0($t0)
+    sw $t1, ($v0)
+    8 = GETATTR 4 main
+    lw $t0, data_1
+    sw $t0, 12($sp)
+    li $a0, 4
+    li $v0, 9
+    syscall
+    sw $v0, 16($sp)
+    lw $t0, ($gp)
+    la $t1, 20($t0)
+    sw $t1, ($v0)
+    lw $t1, 4($sp)
+    subu $sp, $sp, 20
+    sw $ra, 16($sp)
+    lw $t0, 24($sp)
+    sw $t0, 0($sp)
+    lw $t0, 28($sp)
+    sw $t0, 4($sp)
+    lw $t0, 32($sp)
+    sw $t0, 8($sp)
+    lw $t0, 36($sp)
+    sw $t0, 12($sp)
+    lw $t1, ($t1)
+    lw $t0, 16($t1)
+    jr $t0
+    lw $ra, 16($sp)
+    addu $sp, $sp, 20
+    sw $v0, 0($sp)
+    lw $v0, 0($sp)
+    addu $sp, $sp, 20
+    jr $ra
 
-    27_Main_main_internal = ALLOCATE B
-    28_Main_main_internal = LOAD data_3
-    SETATTR 27_Main_main_internal v 28_Main_main_internal
-    29_Main_main_internal = 6 + 9
-    30_Main_main_internal = 0 - 29_Main_main_internal
-    SETATTR 27_Main_main_internal w 30_Main_main_internal
-    ARG 27_Main_main_internal
-    26_Main_main_internal = VCALL B f
-    RETURN 26_Main_main_internal
-}
+String_substring:
 
-function String_substring {
-    ARG self
-    ARG i
-    ARG l
+    subu $sp, $sp, 8
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
 
-    LOCAL 31_Main_main_internal
-    LOCAL 32_Main_main_internal
+    lw $v0, 4($sp)
+    addu $sp, $sp, 8
+    jr $ra
 
-    RETURN 32_Main_main_internal
-}
+String_length:
 
-function String_length {
-    ARG self
+    subu $sp, $sp, 8
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
 
-    LOCAL 33_Main_main_internal
-    LOCAL 34_Main_main_internal
+    lw $v0, 4($sp)
+    addu $sp, $sp, 8
+    jr $ra
 
-    RETURN 34_Main_main_internal
-}
+String_concat:
 
-function String_concat {
-    ARG self
-    ARG str
+    subu $sp, $sp, 8
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
 
-    LOCAL 35_Main_main_internal
-    LOCAL 36_Main_main_internal
+    lw $v0, 4($sp)
+    addu $sp, $sp, 8
+    jr $ra
 
-    RETURN 36_Main_main_internal
-}
+Object_type_name:
 
-function Object_type_name {
-    ARG self
+    subu $sp, $sp, 8
+    li $t0, 0
+    sw $t0, 0($sp)
+    li $t0, 0
+    sw $t0, 4($sp)
 
-    LOCAL 37_Main_main_internal
-    LOCAL 38_Main_main_internal
+    <scope.VariableInfo object at 0x0000023D8DA2CC18> = TYPEOF 4
+    lw $v0, 4($sp)
+    addu $sp, $sp, 8
+    jr $ra
 
-    <scope.VariableInfo object at 0x0000022A59BD2978> = TYPEOF self
-    RETURN 38_Main_main_internal
-}
+Object_abort:
 
-function Object_abort {
-    ARG self
-
-}
+    subu $sp, $sp, 0
+    addu $sp, $sp, 0
+    jr $ra

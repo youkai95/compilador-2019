@@ -392,61 +392,24 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
-class A {
-    w : Int <- -(6+ 9);
+class A inherits B {
+    j : B; 
     d(a : Int, b : String, c : B) : Int {
-        80
-    };
-    
-    r(a : Int, b : String, c : B) : Int {
-        80
-    };
-    
-    e(a : Int, b : String, c : B) : Int {
-        80
-    };
-    
-    w(a : Int, b : String, c : B) : Int {
-        80
-    };
-    
-    q(a : Int, b : String, c : B) : Int {
-        80
-    };
-};
-class C inherits B {
-};
-class B inherits A {
-    v : String <- "asdasd";
-    w : Int;
-    d(b : Int, c : String, q : B) : Int {
         {
-            case q of
-                a : A => w;
-                a : C => a;
-            esac;
-            d(1, "caca", new A);
+            j <- new A;
+            j.d(5, "asd", new B);
         }
     };
-    
-    f() : String {{
-        let x : String <- "culoroto", y : A in y.c(46, x, y);
-        v <- "locota";
-        d(5 + 9, v, new A);
-        v;
-    }};
-    
-    h() : String {{
-        let x : String <- "culoroto", y : A in y.c(46, x, y);
-        v <- "locota";
-        d(5 + 9, v, new A);
-        v;
-    }};
+};
+class B {
+    d(a : Int, b : String, c : B) : Int {
+        98
+    };
 };
 class Main {
     main : Int <- 95;
     main() : String {
-        (new B).f()
+        (new A).d(main, "", new B)
     };
 };
 ''', lexer=l)
@@ -495,7 +458,7 @@ cil = COOLToCILVisitor()
 a = cil.visit(v, type_tree)
 
 writer = MIPSWriterVisitor()
-writer.visit(a)
+writer.visit(a, type_tree)
 
 file = open("output.cil", 'w')
 file.writelines(writer.output)

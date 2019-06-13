@@ -1,5 +1,6 @@
 import cil_hierarchy as cil
 import visitor
+from cool_to_cil import CILFunction
 from scope import VariableInfo
 
 
@@ -9,6 +10,7 @@ class MIPSWriterVisitor(object):
         self.sp = 0
         self.gp = 0
         self.args = []
+        self.types = {}
 
     def emit(self, msg):
         self.output.append(msg + '\n')
@@ -17,7 +19,7 @@ class MIPSWriterVisitor(object):
         self.output.append('\n')
 
     def get_value(self, value):
-        return value if isinstance(value, int) else value.name
+        return value if isinstance(value, int) else value.vmholder
 
     @visitor.on('node')
     def visit(self, node):
@@ -25,69 +27,67 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILProgramNode)
     def visit(self, node:cil.CILProgramNode, type_tree):
-        self.emit('.TYPES')
-        for x in node.dottypes:
-            self.visit(x)
-        self.black()
-
         self.emit('.data')
         for t in type_tree.type_dict:
-            node.dotdata.append(cil.CILDataNode(VariableInfo(t), t))
+            node.dotdata.append(cil.CILDataNode(t, '"%s"' % t))
         for x in node.dotdata:
             self.visit(x)
         self.black()
 
         self.emit('.text')
-        len = 8*len(type_tree.type_dict)
-        self.emit(f'    li $t0, {len}')
-        self.emit(f'    $v0, li')
-        self.emit(f'    $a0, 9')
-        self.emit(f'    syscall')
-        self.emit(f'    li $gp, v0')
-        i = 0
-        for t in type_tree.type_dict:
-            type_tree.type_dict[t].pos = i*8
-            pos = i*8
-            self.emit(f'    li $t0, $gp')
-            self.emit(f'    add $t0, $t0, {pos}')
-            self.emit(f'    la $t1, {t}')
-            self.emit(f'    sw $t1, $t0')
-            i += 1
+        length = 0
+        for x in node.dottypes:
+            length += 8 + len(x.methods) * 4
+            self.types[x.name] = x
 
-        i = 0
-        for t in type_tree.type_dict:
-            pos = i*8 + 4
-            self.emit(f'    li $t0, $gp')
-            self.emit(f'    add $t0, $t0, {pos}')
-            self.emit(f'    li $t1, {type_tree.type_dict[t].parent.pos}')
-            self.emit(f'    sw $t1, $t0')
+        self.emit(f'    li $v0, 9')
+        self.emit(f'    li $a0, {length}')
+        self.emit(f'    syscall')
+        self.emit(f'    sw $v0, ($gp)')
+        pos = 0
+        self.emit(f'    lw $t0, ($gp)')
+        # for x in node.dottypes:
+        #     self.visit(x, type_tree)
+        # self.black()
+
+        pos = 0
+        for t in node.dottypes:
+            l = len(t.methods) * 4
+            t.pos = pos
+            self.emit(f'    la $t1, {t.name}')
+            self.emit(f'    sw $t1, 4($t0)')
+            i = 0
+            for name, method in t.methods.items():
+                method.mips_position = 8 + i
+                self.emit(f'    la $t2, {method.cil_name}')
+                self.emit(f'    sw $t2, {method.mips_position}($t0)')
+                i += 4
+            pos += 8 + l
+            self.emit(f'    add $t0, $t0, {8 + l}')
+
+        self.emit(f'    lw $t0, ($gp)')
+        self.emit(f'    lw $t2, ($gp)')
+        for t in node.dottypes:
+            l = len(t.methods) * 4
+            if type_tree.type_dict[t.name].parent is None:
+                self.emit(f'    li $t1, 0')
+            else:
+                self.emit(f'    li $t1, {self.types[type_tree.type_dict[t.name].parent.name].pos}')
+                self.emit(f'    add $t1, $t1, $t2')
+            self.emit(f'    sw $t1, ($t0)')
+            self.emit(f'    add $t0, $t0, {8 + l}')
 
         for x in node.dotcode:
             self.visit(x)
 
 
     @visitor.when(cil.CILTypeNode)
-    def visit(self, node:cil.CILTypeNode):
-        size = (len(node.attributes) + len(node.methods)) * 4 + 4
-        attributes_offset = 4
-        methods_offset = size - len(node.methods) * 4
-
-        self.emit(f'TYPE {node.name} {{')
-        for attr in node.attributes:
-            self.emit(f'attribute {attr};')
-        for instance_name, real_name in node.methods.items():
-            self.emit(f'method {instance_name} : {real_name};')
-        self.emit('}')
-        i = 0
-        for name, method in node.methods.items():
-            method.mips_position = methods_offset + i
-            self.emit(f'    la $t0, {method.cil_name}')
-            self.emit(f'    sw $t0, {method.mips_position}($v0)')
-            i += 4
+    def visit(self, node:cil.CILTypeNode, type_tree):
+        pass
 
     @visitor.when(cil.CILDataNode)
     def visit(self, node:cil.CILDataNode):
-        self.emit(f'{node.vname}: .asciiz "{node.value}"')
+        self.emit(f'{node.vname}: .asciiz {node.value}')
 
     @visitor.when(cil.CILFunctionNode)
     def visit(self, node:cil.CILFunctionNode):
@@ -114,12 +114,11 @@ class MIPSWriterVisitor(object):
             self.visit(x)
 
         self.emit(f'    addu $sp, $sp, {sp}')
-        self.emit(f'    j $ra')
+        self.emit(f'    jr $ra')
 
     @visitor.when(cil.CILParamNode)
     def visit(self, node:cil.CILParamNode, offset):
         node.param_name.vmholder = offset
-        pass
 
     @visitor.when(cil.CILLocalNode)
     def visit(self, node:cil.CILLocalNode):
@@ -133,8 +132,8 @@ class MIPSWriterVisitor(object):
         if type(node.source) == int:
             self.emit(f'    li $t0, {node.source}')
         else:
-            self.emit(f'    lw $t0, {node.source.vinfo.vmholder}($sp)')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+            self.emit(f'    lw $t0, {node.source.vmholder}($sp)')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILPlusNode)
     def visit(self, node:cil.CILPlusNode):
@@ -142,8 +141,8 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
         self.emit(f'    li $t2, {right}')
-        self.emit(f'    add $t0, {left}, {right}')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+        self.emit(f'    add $t0, $t1, $t2')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILMinusNode)
     def visit(self, node:cil.CILMinusNode):
@@ -151,8 +150,8 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
         self.emit(f'    li $t2, {right}')
-        self.emit(f'    sub $t0, {left}, {right}')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+        self.emit(f'    sub $t0, $1, $2')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILStarNode)
     def visit(self, node:cil.CILStarNode):
@@ -160,8 +159,8 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
         self.emit(f'    li $t2, {right}')
-        self.emit(f'    mulo $t0, {left}, {right}')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+        self.emit(f'    mulo $t0, $1, $2')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILDivNode)
     def visit(self, node:cil.CILDivNode):
@@ -169,9 +168,9 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
         self.emit(f'    li $t2, {right}')
-        self.emit(f'    div {left}, {right}')
+        self.emit(f'    div $t1, $t2')
         self.visit(f'   mflo $t0')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILGetAttribNode)
     def visit(self, node:cil.CILGetAttribNode):
@@ -195,15 +194,15 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILAllocateNode)
     def visit(self, node:cil.CILAllocateNode):
-        size = (len(node.alloc_type.attributes) + len(node.alloc_type.methods)) * 4 + 4
-        self.emit('    li $a0, 9')
-        self.emit(f'    li $v0, {size}')
+        size = len(node.alloc_type.attributes) * 4 + 4
+        self.emit(f'    li $a0, {size}')
+        self.emit('    li $v0, 9')
         self.emit('    syscall')
         self.emit(f'    sw $v0, {node.dst.vmholder}($sp)')
+        self.emit(f'    lw $t0, ($gp)')
+        self.emit(f'    la $t1, {self.types[node.alloc_type.name].pos}($t0)')
+        self.emit(f'    sw $t1, ($v0)')
         node.dst.type = node.alloc_type
-        for name, method in node.alloc_type.methods.items():
-            self.emit(f'    la $t0, {method.cil_name}')
-            self.emit(f'    sw $t0, {method.mips_position}($v0)')
 
     @visitor.when(cil.CILArrayNode)
     def visit(self, node:cil.CILArrayNode):
@@ -229,18 +228,53 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILStaticCallNode)
     def visit(self, node:cil.CILStaticCallNode):
-        pass
+        dest = self.get_value(node.dest_address)
+        l = len(self.args) * 4
+        p = 0
+        self.emit(f'    lw $t1, {self.args[0].vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, {l + 4}')
+        self.emit(f'    sw $ra, {l}($sp)')
+        for arg in self.args:
+            if type(arg) != int:
+                self.emit(f'    lw $t0, {l + 4 + arg.vmholder}($sp)')
+                self.emit(f'    sw $t0, {p}($sp)')
+            else:
+                self.emit(f'    lw $t0, {arg}')
+                self.emit(f'    sw $t0, {p}($sp)')
+            p += 4
+        self.emit(f'    jal {node.type_name}_{node.func_name}')
+        self.emit(f'    lw $ra, {l}($sp)')
+        self.emit(f'    addu $sp, $sp, {l + 4}')
+        self.emit(f'    sw $v0, {node.dest_address.vmholder}($sp)')
+        self.args.clear()
 
     @visitor.when(cil.CILDinamicCallNode)
     def visit(self, node:cil.CILDinamicCallNode):
         dest = self.get_value(node.dest_address)
-        self.emit(f'    {dest} = VCALL {node.type_name} {node.func_name}')
+        l = len(self.args) * 4
+        p = 0
+        self.emit(f'    lw $t1, {self.args[0].vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, {l + 4}')
+        self.emit(f'    sw $ra, {l}($sp)')
+        for arg in self.args:
+            if type(arg) != int:
+                self.emit(f'    lw $t0, {l + 4 + arg.vmholder}($sp)')
+                self.emit(f'    sw $t0, {p}($sp)')
+            else:
+                self.emit(f'    lw $t0, {arg}')
+                self.emit(f'    sw $t0, {p}($sp)')
+            p += 4
+        self.emit(f'    lw $t1, ($t1)')
+        self.emit(f'    lw $t0, {self.types[node.type_name].methods[node.func_name].mips_position}($t1)')
+        self.emit(f'    jr $t0')
+        self.emit(f'    lw $ra, {l}($sp)')
+        self.emit(f'    addu $sp, $sp, {l + 4}')
+        self.emit(f'    sw $v0, {node.dest_address.vmholder}($sp)')
+        self.args.clear()
 
     @visitor.when(cil.CILArgNode)
     def visit(self, node:cil.CILArgNode):
-        val = self.get_value(node.arg_name)
-        self.args.append(val)
-        self.emit(f'    ARG {val}')
+        self.args.append(node.arg_name)
 
     @visitor.when(cil.CILReturnNode)
     def visit(self, node:cil.CILReturnNode):
@@ -315,7 +349,7 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILCheckHierarchy)
     def visit(self, node: cil.CILCheckHierarchy):
-
+        pass
     # @visitor.when(cil.CILCheckTypeHierarchy)
     # def visit(self, node: cil.CILCheckTypeHierarchy):
     #     var = self.get_value(node.dest)
