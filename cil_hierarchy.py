@@ -74,11 +74,11 @@ class CILCheckHierarchy(CILInstructionNode):
         self.a = a
         self.b = b
 
-class CILCheckTypeHierarchy(CILInstructionNode):
-    def __init__(self, dest, a, b):
-        self.dest = dest
-        self.a = a
-        self.b = b
+# class CILCheckTypeHierarchy(CILInstructionNode):
+#     def __init__(self, dest, a, b):
+#         self.dest = dest
+#         self.a = a
+#         self.b = b
 
 class CILGetAttribNode(CILInstructionNode):
     def __init__(self, dest, type_src, attr_addr):

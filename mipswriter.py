@@ -1,5 +1,7 @@
 import cil_hierarchy as cil
 import visitor
+from scope import VariableInfo
+
 
 class MIPSWriterVisitor(object):
     def __init__(self):
@@ -22,18 +24,44 @@ class MIPSWriterVisitor(object):
         pass
 
     @visitor.when(cil.CILProgramNode)
-    def visit(self, node:cil.CILProgramNode):
+    def visit(self, node:cil.CILProgramNode, type_tree):
         self.emit('.TYPES')
         for x in node.dottypes:
             self.visit(x)
         self.black()
 
         self.emit('.data')
+        for t in type_tree.type_dict:
+            node.dotdata.append(cil.CILDataNode(VariableInfo(t), t))
         for x in node.dotdata:
             self.visit(x)
         self.black()
 
         self.emit('.text')
+        len = 8*len(type_tree.type_dict)
+        self.emit(f'    li $t0, {len}')
+        self.emit(f'    $v0, li')
+        self.emit(f'    $a0, 9')
+        self.emit(f'    syscall')
+        self.emit(f'    li $gp, v0')
+        i = 0
+        for t in type_tree.type_dict:
+            type_tree.type_dict[t].pos = i*8
+            pos = i*8
+            self.emit(f'    li $t0, $gp')
+            self.emit(f'    add $t0, $t0, {pos}')
+            self.emit(f'    la $t1, {t}')
+            self.emit(f'    sw $t1, $t0')
+            i += 1
+
+        i = 0
+        for t in type_tree.type_dict:
+            pos = i*8 + 4
+            self.emit(f'    li $t0, $gp')
+            self.emit(f'    add $t0, $t0, {pos}')
+            self.emit(f'    li $t1, {type_tree.type_dict[t].parent.pos}')
+            self.emit(f'    sw $t1, $t0')
+
         for x in node.dotcode:
             self.visit(x)
 
@@ -64,7 +92,6 @@ class MIPSWriterVisitor(object):
     @visitor.when(cil.CILFunctionNode)
     def visit(self, node:cil.CILFunctionNode):
         self.black()
-
         self.emit(f'{node.fname}:')
 
         offset = len(node.params) * 4
@@ -111,31 +138,40 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILPlusNode)
     def visit(self, node:cil.CILPlusNode):
-        dest = node.dest.name
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {dest} = {left} + {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    add $t0, {left}, {right}')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILMinusNode)
     def visit(self, node:cil.CILMinusNode):
-        dest = node.dest.name
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {dest} = {left} - {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    sub $t0, {left}, {right}')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILStarNode)
     def visit(self, node:cil.CILStarNode):
-        dest = node.dest.name
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {dest} = {left} * {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    mulo $t0, {left}, {right}')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILDivNode)
     def visit(self, node:cil.CILDivNode):
-        dest = node.dest.name
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {dest} = {left} / {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    div {left}, {right}')
+        self.visit(f'   mflo $t0')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILGetAttribNode)
     def visit(self, node:cil.CILGetAttribNode):
@@ -251,36 +287,47 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILEqualNode)
     def visit(self, node: cil.CILEqualNode):
-        var = self.get_value(node.dest)
-        left = self.get_value(node.left)
-        right = self.get_value(node.right)
-        self.emit(f'    {var} = {left} == {right}')
+        def visit(self, node: cil.CILLessEqualNode):
+            left = self.get_value(node.left)
+            self.emit(f'    li $t1, {left}')
+            right = self.get_value(node.right)
+            self.emit(f'    li $t2, {right}')
+            self.emit(f'    seq $t0, $t1, $t2')
+            self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILLessThanNode)
-    def visit(self, node: cil.CILEqualNode):
-        var = self.get_value(node.dest)
+    def visit(self, node: cil.CILLessThanNode):
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {var} = {left} < {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    stl $t0, $t1, $t2')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILLessEqualNode)
-    def visit(self, node: cil.CILEqualNode):
-        var = self.get_value(node.dest)
+    def visit(self, node: cil.CILLessEqualNode):
         left = self.get_value(node.left)
+        self.emit(f'    li $t1, {left}')
         right = self.get_value(node.right)
-        self.emit(f'    {var} = {left} <= {right}')
+        self.emit(f'    li $t2, {right}')
+        self.emit(f'    sle $t0, $t1, $t2')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILCheckHierarchy)
     def visit(self, node: cil.CILCheckHierarchy):
-        var = self.get_value(node.dest)
-        b = self.get_value(node.b)
-        self.emit(f'    {var} = INHERITS {b} {node.a}')
 
-    @visitor.when(cil.CILCheckTypeHierarchy)
-    def visit(self, node: cil.CILCheckTypeHierarchy):
-        var = self.get_value(node.dest)
-        self.emit(f'    {var} = TYPE_INHERITS {node.b} {node.a}')
+    # @visitor.when(cil.CILCheckTypeHierarchy)
+    # def visit(self, node: cil.CILCheckTypeHierarchy):
+    #     var = self.get_value(node.dest)
+    #     self.emit(f'    {var} = TYPE_INHERITS {node.b} {node.a}')
 
     @visitor.when(cil.CILErrorNode)
     def visit(self, node: cil.CILErrorNode):
-        self.emit(f'    ERROR')
+        self.emit(f'    break 0')
+
+    @visitor.when(cil.CILNotNode)
+    def visit(self, node: cil.CILNotNode):
+        var = self.get_value(node.expr)
+        self.emit(f'    li $t0, {var}')
+        self.emit(f'    not $t0, $t0')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
