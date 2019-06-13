@@ -19,6 +19,65 @@ class MIPSWriterVisitor(object):
     def get_value(self, value):
         return value if isinstance(value, int) else value.name
 
+    def check_hierarchy(self):
+        self.emit(f'    check_hierarchy:')
+        self.emit(f'    la $t0, $a0')
+        self.emit(f'    la $t1, $a1')
+        self.emit(f'    xor $t2, $t2, $t2')
+        self.emit(f'    beq $t0, $t1, goodend_check_hierarchy')
+
+        self.emit(f'    loop_check_hierarchy:')
+        self.emit(f'    lw $t1, 4($t1)')
+        self.emit(f'    beq $t1, $t2, badend_check_hierarchy')
+        self.emit(f'    beq $t0, $t1, goodend_check_hierarchy')
+        self.emit(f'    j loop_check_hierarchy_check_hierarchy')
+        self.emit(f'    badend_check_hierarchy:')
+        self.emit(f'    li $v0, 0')
+        self.emit(f'    j $ra')
+        self.emit(f'    goodend_check_hierarchy:')
+        self.emit(f'    li $v0, 1')
+        self.emit(f'    jr $ra')
+
+    def lenght(self):
+        self.emit(f'    lenght:')
+        self.emit(f'    xor $t0, $t0, $t0') #letras
+        self.emit(f'    xor $t1, $t1, $t1') #cero
+        self.emit(f'    xor $v0, $v0, $v0') #result
+        self.emit(f'    loop_lenght:')
+        self.emit(f'    lb $t0, ($a0)')
+        self.emit(f'    beq $t0, $t1, end_lenght')
+        self.emit(f'    addu $v0, $v0, 1')
+        self.emit(f'    addu $a0, $a0, 1')
+        self.emit(f'    j loop_lenght')
+        self.emit(f'    end_lenght:')
+        self.emit(f'    j $ra')
+
+    def concat(self):
+        self.emit(f'    concat:')
+        self.emit(f'    xor $t0, $t0, $t0')  # letras
+        self.emit(f'    xor $t1, $t1, $t1')  # cero
+        #self.emit(f'    xor $v0, $v0, $v0')  # result
+        #self.emit(f'    la $v0, ($a2)')
+        self.emit(f'    loop_concat1:')
+        self.emit(f'    lb $t0, ($a0)')
+        self.emit(f'    beq $t0, $t1, concat2')
+        self.emit(f'    sb $t0, ($a2)')
+        self.emit(f'    add $a0, $a0, 1')
+        self.emit(f'    add $a2, $a2, 1')
+        self.emit(f'    j loop_concat1')
+        self.emit(f'    concat2:')
+        #self.emit(f'    xor $t0, $t0, $t0')
+        self.emit(f'    loop_concat2:')
+        self.emit(f'    lb $t0, ($a1)')
+        self.emit(f'    beq $t0, $t1, end_concat')
+        self.emit(f'    sb $t0, ($a2)')
+        self.emit(f'    add $a1, $a1, 1')
+        self.emit(f'    add $a2, $a2, 1')
+        self.emit(f'    j loop_concat2')
+        self.emit(f'    end_concat:')
+        self.emit(f'    sb $t1, ($a2)')
+        self.emit(f'    j $ra')
+
     @visitor.on('node')
     def visit(self, node):
         pass
@@ -38,8 +97,8 @@ class MIPSWriterVisitor(object):
         self.black()
 
         self.emit('.text')
-        len = 8*len(type_tree.type_dict)
-        self.emit(f'    li $t0, {len}')
+        lenght = 8*len(type_tree.type_dict)
+        self.emit(f'    li $t0, {lenght}')
         self.emit(f'    $v0, li')
         self.emit(f'    $a0, 9')
         self.emit(f'    syscall')
@@ -230,11 +289,50 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILLengthNode)
     def visit(self, node:cil.CILLengthNode):
-        pass
+        self.emit(f'    lw $a0, {node.src.vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal lenght')
+        self.lenght()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    sw  $v0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILConcatNode)
     def visit(self, node:cil.CILConcatNode):
-        pass
+        self.emit(f'    lw $a0, {node.str.vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal lenght')
+        self.lenght()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    la $t0, $v0')
+        self.emit(f'    lw $a0, {node.src.vmholder}($sp)')
+        self.emit(f'    subu $sp, $sp, 8')
+        self.emit(f'    sw $ra, 4($sp)')
+        self.emit(f'    sw $t0, ($sp)')
+        self.emit(f'    jal lenght')
+        self.lenght()
+        self.emit(f'    lw $t0, ($sp)')
+        self.emit(f'    lw $ra, 4($sp)')
+        self.emit(f'    addu $sp, $sp, 8')
+        self.emit(f'    addu $v0, $v0, $t0')
+        self.emit(f'    addu $v0, $v0, 1')
+        self.emit(f'    li $a0, 9')
+        self.emit(f'    syscall')
+        self.emit(f'    la $a2, $v0')
+        self.emit(f'    lb $a0, {node.str.vmholder}($sp)')
+        self.emit(f'    lb $a0, ($a0)')
+        self.emit(f'    lb $a1, {node.src.vmholder}($sp)')
+        self.emit(f'    lb $a1, ($a1)')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal concat')
+        self.concat()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    sw  $v0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILPrefixNode)
     def visit(self, node:cil.CILPrefixNode):
@@ -257,6 +355,7 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILPrintNode)
     def visit(self, node:cil.CILPrintNode):
+
         self.emit(f'    PRINT {node.str_addr.name}')
 
     @visitor.when(cil.CILEqualNode)
@@ -289,6 +388,17 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILCheckHierarchy)
     def visit(self, node: cil.CILCheckHierarchy):
+        self.emit(f'    lw $a0, {node.a.vmholder}($sp)')
+        self.emit(f'    lw $a0, ($a0)')
+        self.emit(f'    lw $a1, ($gp)')
+        self.emit(f'    add $a1, $a1, {node.b.pos}')
+        self.emit(f'    subu $sp, $sp, 4')
+        self.emit(f'    sw $ra, ($sp)')
+        self.emit(f'    jal check_hierarchy')
+        self.check_hierarchy()
+        self.emit(f'    lw $ra, ($sp)')
+        self.emit(f'    addu $sp, $sp, 4')
+        self.emit(f'    sw $v0, {node.dest.vinfo.vmholder}($sp)')
 
     # @visitor.when(cil.CILCheckTypeHierarchy)
     # def visit(self, node: cil.CILCheckTypeHierarchy):
