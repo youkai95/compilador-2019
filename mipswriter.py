@@ -473,4 +473,4 @@ class MIPSWriterVisitor(object):
         var = self.get_value(node.expr)
         self.emit(f'    li $t0, {var}')
         self.emit(f'    not $t0, $t0')
-        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
+        self.emit(f'    sw $t0, {node.dst.vinfo.vmholder}($sp)')
