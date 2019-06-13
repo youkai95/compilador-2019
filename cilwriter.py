@@ -248,3 +248,7 @@ class CILWriterVisitor(object):
     @visitor.when(cil.CILErrorNode)
     def visit(self, node: cil.CILErrorNode):
         self.emit(f'    ERROR')
+
+    @visitor.when(cil.CILNotNode)
+    def visit(self, node: cil.CILNotNode):
+        self.emit("")

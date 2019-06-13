@@ -16,6 +16,7 @@ class MethodType:
         self.ret_type = rettype
         self.param_types = param_types
         self.cil_name = ""
+        self.mips_position = 0
 
 # TODO Built-in methods for types. Boxing/Unboxing for Object type
 class TypeTree:

@@ -397,6 +397,22 @@ class A {
     d(a : Int, b : String, c : B) : Int {
         80
     };
+    
+    r(a : Int, b : String, c : B) : Int {
+        80
+    };
+    
+    e(a : Int, b : String, c : B) : Int {
+        80
+    };
+    
+    w(a : Int, b : String, c : B) : Int {
+        80
+    };
+    
+    q(a : Int, b : String, c : B) : Int {
+        80
+    };
 };
 class C inherits B {
 };
@@ -419,9 +435,16 @@ class B inherits A {
         d(5 + 9, v, new A);
         v;
     }};
+    
+    h() : String {{
+        let x : String <- "culoroto", y : A in y.c(46, x, y);
+        v <- "locota";
+        d(5 + 9, v, new A);
+        v;
+    }};
 };
 class Main {
-    main : Int;
+    main : Int <- 95;
     main() : String {
         (new B).f()
     };
@@ -471,7 +494,7 @@ if not is_ok:
 cil = COOLToCILVisitor()
 a = cil.visit(v, type_tree)
 
-writer = CILWriterVisitor()
+writer = MIPSWriterVisitor()
 writer.visit(a)
 
 file = open("output.cil", 'w')

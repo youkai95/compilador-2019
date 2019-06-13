@@ -2,8 +2,12 @@ import ast_hierarchy as ast
 import cil_hierarchy as cil
 import visitor
 from scope import VariableInfo
-from typetree import ClassType, TypeTree
+from typetree import ClassType, TypeTree, MethodType
 
+class CILFunction:
+    def __init__(self, name):
+        self.cil_name = name
+        self.mips_position = 0
 
 class COOLToCILVisitor:
     def __init__(self):
@@ -68,7 +72,7 @@ class COOLToCILVisitor:
         if type_info.methods:
             for name in type_info.methods:
                 #type_info.methods[name].cil_name = f"{type_info.name}_{name}"
-                methods[name] = type_info.methods[name].cil_name
+                methods[name] = CILFunction(type_info.methods[name].cil_name)
         if type_info.attributes:
             for name in type_info.attributes:
                 attrib.append(name)
@@ -109,8 +113,11 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.ProgramNode)
     def visit(self, node:ast.ProgramNode, type_tree:TypeTree):
-        n = cil.CILAllocateNode("Main", self.define_internal_local())
-        m = ast.MethodNode("main",[], "Int", ast.DispatchInstanceNode(n.dst, "main", []))
+        n = ast.NewNode("Main")
+        n.type = type_tree.get_type("Main")
+        m = ast.MethodNode("entry",[], type_tree.get_type("Int"), ast.DispatchInstanceNode(n, "main", []))
+        m.vinfo = MethodType("entry", m.type, [])
+        m.vinfo.cil_name = "entry"
         self.visit(m, type_tree)
         for expr in node.expr:
             self.visit(expr, type_tree)
@@ -268,7 +275,7 @@ class COOLToCILVisitor:
     @visitor.when(ast.NewNode)
     def visit(self, node: ast.NewNode, type_tree: TypeTree):
         var = self.define_internal_local()
-        self.instructions.append(cil.CILAllocateNode(node.type_token, var))
+        self.instructions.append(cil.CILAllocateNode(type_tree.get_type(node.type_token), var))
         t = type_tree.get_type(node.type_token)
         while t:
             for name, attr in t.attributes.items():

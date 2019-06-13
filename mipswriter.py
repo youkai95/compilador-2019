@@ -40,16 +40,26 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILTypeNode)
     def visit(self, node:cil.CILTypeNode):
+        size = (len(node.attributes) + len(node.methods)) * 4 + 4
+        attributes_offset = 4
+        methods_offset = size - len(node.methods) * 4
+
         self.emit(f'TYPE {node.name} {{')
         for attr in node.attributes:
             self.emit(f'attribute {attr};')
         for instance_name, real_name in node.methods.items():
             self.emit(f'method {instance_name} : {real_name};')
         self.emit('}')
+        i = 0
+        for name, method in node.methods.items():
+            method.mips_position = methods_offset + i
+            self.emit(f'    la $t0, {method.cil_name}')
+            self.emit(f'    sw $t0, {method.mips_position}($v0)')
+            i += 4
 
     @visitor.when(cil.CILDataNode)
     def visit(self, node:cil.CILDataNode):
-        self.emit(f'{node.vname} = {node.value}')
+        self.emit(f'{node.vname}: .asciiz "{node.value}"')
 
     @visitor.when(cil.CILFunctionNode)
     def visit(self, node:cil.CILFunctionNode):
@@ -57,8 +67,10 @@ class MIPSWriterVisitor(object):
 
         self.emit(f'{node.fname}:')
 
+        offset = len(node.params) * 4
         for x in node.params:
-            self.visit(x)
+            self.visit(x, offset)
+            offset -= 4
         if node.params:
             self.black()
 
@@ -75,23 +87,27 @@ class MIPSWriterVisitor(object):
             self.visit(x)
 
         self.emit(f'    addu $sp, $sp, {sp}')
+        self.emit(f'    j $ra')
 
     @visitor.when(cil.CILParamNode)
-    def visit(self, node:cil.CILParamNode):
-
+    def visit(self, node:cil.CILParamNode, offset):
+        node.param_name.vmholder = offset
         pass
 
     @visitor.when(cil.CILLocalNode)
     def visit(self, node:cil.CILLocalNode):
-        self.emit(f'    li $t1, 0')
-        self.emit(f'    sw $t1, {self.sp}($sp)')
+        self.emit(f'    li $t0, 0')
+        self.emit(f'    sw $t0, {self.sp}($sp)')
         node.vinfo.vmholder = self.sp
         self.sp += 4
 
     @visitor.when(cil.CILAssignNode)
     def visit(self, node:cil.CILAssignNode):
-        self.emit(f'    lw $t1 {node.source.vinfo.vmholder}($sp)')
-        self.emit(f'    sw $t1 {node.dest.vinfo.vmholder}($sp)')
+        if type(node.source) == int:
+            self.emit(f'    li $t0, {node.source}')
+        else:
+            self.emit(f'    lw $t0, {node.source.vinfo.vmholder}($sp)')
+        self.emit(f'    sw $t0, {node.dest.vinfo.vmholder}($sp)')
 
     @visitor.when(cil.CILPlusNode)
     def visit(self, node:cil.CILPlusNode):
@@ -143,8 +159,15 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILAllocateNode)
     def visit(self, node:cil.CILAllocateNode):
-        dst = self.get_value(node.dst)
-        self.emit(f"    {dst} = ALLOCATE {node.alloc_type}")
+        size = (len(node.alloc_type.attributes) + len(node.alloc_type.methods)) * 4 + 4
+        self.emit('    li $a0, 9')
+        self.emit(f'    li $v0, {size}')
+        self.emit('    syscall')
+        self.emit(f'    sw $v0, {node.dst.vmholder}($sp)')
+        node.dst.type = node.alloc_type
+        for name, method in node.alloc_type.methods.items():
+            self.emit(f'    la $t0, {method.cil_name}')
+            self.emit(f'    sw $t0, {method.mips_position}($v0)')
 
     @visitor.when(cil.CILArrayNode)
     def visit(self, node:cil.CILArrayNode):
@@ -157,7 +180,7 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILLabelNode)
     def visit(self, node:cil.CILLabelNode):
-        self.emit(f'    LABEL {node.lname}')
+        self.emit(f'{node.lname}:')
 
     @visitor.when(cil.CILGotoNode)
     def visit(self, node:cil.CILGotoNode):
@@ -185,14 +208,15 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILReturnNode)
     def visit(self, node:cil.CILReturnNode):
-        value = self.get_value(node.value)
-        value = "" if value is None else str(value)
-        self.emit(f'    RETURN {value}')
+        if type(node.value) == int:
+            self.emit(f'    li $v0, {node.value}')
+        else:
+            self.emit(f'    lw $v0, {node.value.vmholder}($sp)')
 
     @visitor.when(cil.CILLoadNode)
     def visit(self, node:cil.CILLoadNode):
-        dest = node.dest.name
-        self.emit(f'    {dest} = LOAD {node.msg.vname}')
+        self.emit(f'    lw $t0, {node.msg.vname}')
+        self.emit(f'    sw $t0, {node.dest.vmholder}($sp)')
 
     @visitor.when(cil.CILLengthNode)
     def visit(self, node:cil.CILLengthNode):
