@@ -240,11 +240,6 @@ class CILWriterVisitor(object):
         b = self.get_value(node.b)
         self.emit(f'    {var} = INHERITS {b} {node.a}')
 
-    @visitor.when(cil.CILCheckTypeHierarchy)
-    def visit(self, node: cil.CILCheckTypeHierarchy):
-        var = self.get_value(node.dest)
-        self.emit(f'    {var} = TYPE_INHERITS {node.b} {node.a}')
-
     @visitor.when(cil.CILErrorNode)
     def visit(self, node: cil.CILErrorNode):
         self.emit(f'    ERROR')
