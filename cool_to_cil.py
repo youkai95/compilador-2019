@@ -91,7 +91,7 @@ class COOLToCILVisitor:
         for i in a:
             vinfo = VariableInfo(i)
             variables.append(vinfo)
-            args.append(cil.CILArgNode(vinfo))
+            args.append(cil.CILParamNode(vinfo))
 
         l = self.define_internal_local()
         variables.append(l)
@@ -128,7 +128,28 @@ class COOLToCILVisitor:
         self.build_in_methods(["self"], cil.CILTypeOfNode, ("self",), type_tree.get_type("Object").methods["type_name"])
         #type_tree.get_type("Object").methods["abort"].cil_name = "abort"
         selfvar = VariableInfo("self")
-        self.dotcode.append(cil.CILFunctionNode(type_tree.get_type("Object").methods["abort"].cil_name, [cil.CILArgNode(selfvar)], [], [cil.CILAbortNode(selfvar)]))
+        self.dotcode.append(cil.CILFunctionNode(type_tree.get_type("Object").methods["abort"].cil_name, [cil.CILParamNode(selfvar)], [], [cil.CILAbortNode(selfvar)]))
+
+        attrib = []
+        methods = {}
+        self.build_type(type_tree.get_type("Object"), attrib, methods)
+        self.types.append(cil.CILTypeNode("Object", attrib, methods))
+        attrib = []
+        methods = {}
+        self.build_type(type_tree.get_type("Int"), attrib, methods)
+        self.types.append(cil.CILTypeNode("Int", attrib, methods))
+        attrib = []
+        methods = {}
+        self.build_type(type_tree.get_type("String"), attrib, methods)
+        self.types.append(cil.CILTypeNode("String", attrib, methods))
+        attrib = []
+        methods = {}
+        self.build_type(type_tree.get_type("Bool"), attrib, methods)
+        self.types.append(cil.CILTypeNode("Bool", attrib, methods))
+        attrib = []
+        methods = {}
+        self.build_type(type_tree.get_type("IO"), attrib, methods)
+        self.types.append(cil.CILTypeNode("IO", attrib, methods))
         return cil.CILProgramNode(self.types, self.dotdata, self.dotcode)
 
     @visitor.when(ast.PlusNode)
@@ -405,8 +426,8 @@ class COOLToCILVisitor:
         for i in range(0, len(node.expresion_list)):
             self.instructions.append(labels[i])
             for j in range(i + 1, len(node.expresion_list)):
-                e1 = node.expresion_list[j].variable.type_token
-                e2 = node.expresion_list[i].variable.type_token
+                e1 = type_tree.get_type(node.expresion_list[j].variable.type_token)
+                e2 = type_tree.get_type(node.expresion_list[i].variable.type_token)
                 check = type_tree.check_variance(e2, e1)
                 #check = cil.CILCheckTypeHierarchy(checkr, e2, e1)
                 #self.instructions.append(check)
@@ -460,7 +481,7 @@ class COOLToCILVisitor:
         for param in node.params:
             args.append(cil.CILArgNode(self.visit(param, type_tree)))
         self.instructions += args
-        self.instructions.append(cil.CILDinamicCallNode(node.parent, node.method, r))
+        self.instructions.append(cil.CILStaticCallNode(node.parent, node.method, r))
         return r
 
     @visitor.when(ast.DispatchInstanceNode)
