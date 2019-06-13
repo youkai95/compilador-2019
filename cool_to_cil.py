@@ -109,7 +109,7 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.ProgramNode)
     def visit(self, node:ast.ProgramNode, type_tree:TypeTree):
-        n = cil.CILAllocateNode("Main", self.define_internal_local())
+        n = ast.NewNode("Main")
         m = ast.MethodNode("main",[], "Int", ast.DispatchInstanceNode(n.dst, "main", []))
         self.visit(m, type_tree)
         for expr in node.expr:
@@ -400,9 +400,10 @@ class COOLToCILVisitor:
             for j in range(i + 1, len(node.expresion_list)):
                 e1 = node.expresion_list[j].variable.type_token
                 e2 = node.expresion_list[i].variable.type_token
-                check = cil.CILCheckTypeHierarchy(checkr, e2, e1)
-                self.instructions.append(check)
-                self.instructions.append(cil.CILGotoIfNode(checkr, tunels[j]))
+                check = type_tree.check_variance(e2, e1)
+                #check = cil.CILCheckTypeHierarchy(checkr, e2, e1)
+                #self.instructions.append(check)
+                self.instructions.append(cil.CILGotoIfNode(check, tunels[j]))
                 self.instructions.append(bases[j])
             t = cil.CILLabelNode(self.gen_label())
             ends.append(t)
