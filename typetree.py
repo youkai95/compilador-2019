@@ -5,6 +5,7 @@ class ClassType:
         self.methods = methods if methods else {}
         self.attributes = attrb if attrb else {}
         self.generate_cil_names()
+        self.pos = None
 
     def generate_cil_names(self):
         for name, method in self.methods.items():
