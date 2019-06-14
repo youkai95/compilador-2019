@@ -196,10 +196,23 @@ class CILToStrNode(CILInstructionNode):
         self.dest = dest
         self.ivalue = ivalue
 
-class CILReadNode(CILInstructionNode):
+class CILReadIntNode(CILInstructionNode):
     def __init__(self, dest):
         self.dest = dest
 
-class CILPrintNode(CILInstructionNode):
-    def __init__(self, str_addr):
+class CILReadStringNode(CILInstructionNode):
+    def __init__(self, dest):
+        self.dest = dest
+
+class CILPrintIntNode(CILInstructionNode):
+    def __init__(self, src, str_addr):
         self.str_addr = str_addr
+        self.src = src
+
+class CILPrintStringNode(CILInstructionNode):
+    def __init__(self, src, str_addr):
+        self.str_addr = str_addr
+        self.src = src
+
+class CILEndProgram(CILInstructionNode):
+    pass
