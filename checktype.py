@@ -184,9 +184,9 @@ class CheckTypeVisitor:
                 if name == node.idx_token:
                     temp = method
                     break
-                clss = clss.parent
+            clss = clss.parent
         if not temp:
-            errors.append("Class '%s' doesnt contains method '%s'" % (clss.name, node.method))
+            errors.append("Class '%s' doesnt contains method '%s'" % (self.classType.name, node.idx_token))
             return tree.get_type("Void")
         if len(temp.param_types) == len(node.expresion_list):
             for i in range(len(node.expresion_list)):
