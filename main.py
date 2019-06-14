@@ -392,24 +392,10 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
-class A inherits B {
-    j : B; 
-    d(a : Int, b : String, c : B) : Int {
-        {
-            j <- new A;
-            j@B.d(5, "asd", new B);
-        }
-    };
-};
-class B {
-    d(a : Int, b : String, c : B) : Int {
-        98
-    };
-};
-class Main {
+class Main inherits IO {
     main : Int <- 95;
-    main() : String {
-        "caca".length()
+    main() : IO {
+        out_int("caca".length())
     };
 };
 ''', lexer=l)
@@ -440,14 +426,18 @@ csvisitor = CheckSemanticsVisitor()
 is_ok = csvisitor.visit(v, scope, errors)
 
 print('Succeed!' if is_ok else 'Fail!')
-for e in errors:
-    print(e)
+if len(errors) > 0:
+    for e in errors:
+        print(e)
+    exit()
 
 typecheck = CheckTypeVisitor()
 typecheck.visit(v, type_tree, errors)
 
-for e in errors:
-    print(e)
+if len(errors) > 0:
+    for e in errors:
+        print(e)
+    exit()
 # ===============================================================
 
 if not is_ok:

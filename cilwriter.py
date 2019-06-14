@@ -203,13 +203,13 @@ class CILWriterVisitor(object):
         ivalue = self.get_value(node.ivalue)
         self.emit(f'    {dest} = STR {ivalue}')
 
-    @visitor.when(cil.CILReadNode)
-    def visit(self, node:cil.CILReadNode):
+    @visitor.when(cil.CILReadStringNode)
+    def visit(self, node:cil.CILReadStringNode):
         dest = node.dest.name
         self.emit(f'    {dest} = READ')
 
-    @visitor.when(cil.CILPrintNode)
-    def visit(self, node:cil.CILPrintNode):
+    @visitor.when(cil.CILPrintIntNode)
+    def visit(self, node:cil.CILPrintIntNode):
         self.emit(f'    PRINT {node.str_addr.name}')
 
     @visitor.when(cil.CILEqualNode)
