@@ -397,7 +397,7 @@ class A inherits B {
     d(a : Int, b : String, c : B) : Int {
         {
             j <- new A;
-            j.d(5, "asd", new B);
+            j@B.d(5, "asd", new B);
         }
     };
 };
@@ -409,7 +409,7 @@ class B {
 class Main {
     main : Int <- 95;
     main() : String {
-        (new A).d(main, "", new B)
+        "caca".length()
     };
 };
 ''', lexer=l)

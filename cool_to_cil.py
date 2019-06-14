@@ -62,6 +62,7 @@ class COOLToCILVisitor:
     def define_selftype(self):
         vname = "self"
         vinfo = VariableInfo(vname)
+        vinfo.type = self.current_typename
         self.selftype = vinfo
         return vinfo
 

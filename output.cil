@@ -1,6 +1,6 @@
 .data
 data_0: .asciiz "asd"
-data_1: .asciiz ""
+data_1: .asciiz "caca"
 Object: .asciiz "Object"
 Int: .asciiz "Int"
 String: .asciiz "String"
@@ -12,11 +12,7 @@ B: .asciiz "B"
 Main: .asciiz "Main"
 
 .text
-    li $v0, 9
-    li $a0, 160
-    syscall
-    sw $v0, ($gp)
-    lw $t0, ($gp)
+    la $t0, ($gp)
     la $t1, A
     sw $t1, 4($t0)
     la $t2, Object_abort
@@ -89,8 +85,8 @@ Main: .asciiz "Main"
     la $t2, IO_in_int
     sw $t2, 20($t0)
     add $t0, $t0, 24
-    lw $t0, ($gp)
-    lw $t2, ($gp)
+    la $t0, ($gp)
+    la $t2, ($gp)
     li $t1, 20
     add $t1, $t1, $t2
     sw $t1, ($t0)
@@ -122,6 +118,10 @@ Main: .asciiz "Main"
     add $t1, $t1, $t2
     sw $t1, ($t0)
     add $t0, $t0, 24
+    li $a0, 128
+    li $v0, 9
+    syscall
+    sw $v0, 160($gp)
 
 entry:
 
@@ -135,10 +135,11 @@ entry:
     li $v0, 9
     syscall
     sw $v0, 4($sp)
-    lw $t0, ($gp)
-    la $t1, 40($t0)
+    la $t1, 40($gp)
     sw $t1, ($v0)
-    SETATTR 4 main 95
+    lw $t0, 4($sp)
+    li $t1, 95
+    sw $t1, 4($t0)
     lw $t1, 4($sp)
     subu $sp, $sp, 8
     sw $ra, 4($sp)
@@ -146,7 +147,7 @@ entry:
     sw $t0, 0($sp)
     lw $t1, ($t1)
     lw $t0, 16($t1)
-    jr $t0
+    jalr $t0
     lw $ra, 4($sp)
     addu $sp, $sp, 8
     sw $v0, 0($sp)
@@ -172,34 +173,34 @@ A_d:
     li $v0, 9
     syscall
     sw $v0, 0($sp)
-    lw $t0, ($gp)
-    la $t1, 0($t0)
+    la $t1, 0($gp)
     sw $t1, ($v0)
-    SETATTR 16 j 0
-    8 = GETATTR 16 j
-    lw $t0, data_0
+    lw $t0, 32($sp)
+    lw $t1, 0($sp)
+    sw $t1, 4($t0)
+    lw $t0, 32($sp)
+    lw $t1, 4($t0)
+    sw $t1, 8($sp)
+    la $t0, data_0
     sw $t0, 12($sp)
     li $a0, 4
     li $v0, 9
     syscall
     sw $v0, 16($sp)
-    lw $t0, ($gp)
-    la $t1, 20($t0)
+    la $t1, 20($gp)
     sw $t1, ($v0)
     lw $t1, 8($sp)
     subu $sp, $sp, 20
     sw $ra, 16($sp)
     lw $t0, 28($sp)
-    sw $t0, 0($sp)
-    lw $t0, 5
-    sw $t0, 4($sp)
-    lw $t0, 32($sp)
-    sw $t0, 8($sp)
-    lw $t0, 36($sp)
     sw $t0, 12($sp)
-    lw $t1, ($t1)
-    lw $t0, 16($t1)
-    jr $t0
+    li $t0, 5
+    sw $t0, 8($sp)
+    lw $t0, 32($sp)
+    sw $t0, 4($sp)
+    lw $t0, 36($sp)
+    sw $t0, 0($sp)
+    jal B_d
     lw $ra, 16($sp)
     addu $sp, $sp, 20
     sw $v0, 4($sp)
@@ -216,54 +217,27 @@ B_d:
 
 Main_main:
 
-    subu $sp, $sp, 20
+    subu $sp, $sp, 8
     li $t0, 0
     sw $t0, 0($sp)
     li $t0, 0
     sw $t0, 4($sp)
-    li $t0, 0
-    sw $t0, 8($sp)
-    li $t0, 0
-    sw $t0, 12($sp)
-    li $t0, 0
-    sw $t0, 16($sp)
 
-    li $a0, 8
-    li $v0, 9
-    syscall
-    sw $v0, 4($sp)
-    lw $t0, ($gp)
-    la $t1, 0($t0)
-    sw $t1, ($v0)
-    8 = GETATTR 4 main
-    lw $t0, data_1
-    sw $t0, 12($sp)
-    li $a0, 4
-    li $v0, 9
-    syscall
-    sw $v0, 16($sp)
-    lw $t0, ($gp)
-    la $t1, 20($t0)
-    sw $t1, ($v0)
-    lw $t1, 4($sp)
-    subu $sp, $sp, 20
-    sw $ra, 16($sp)
-    lw $t0, 24($sp)
-    sw $t0, 0($sp)
-    lw $t0, 28($sp)
+    la $t0, data_1
     sw $t0, 4($sp)
-    lw $t0, 32($sp)
-    sw $t0, 8($sp)
-    lw $t0, 36($sp)
-    sw $t0, 12($sp)
+    lw $t1, 4($sp)
+    subu $sp, $sp, 8
+    sw $ra, 4($sp)
+    lw $t0, 12($sp)
+    sw $t0, 0($sp)
     lw $t1, ($t1)
-    lw $t0, 16($t1)
-    jr $t0
-    lw $ra, 16($sp)
-    addu $sp, $sp, 20
+    lw $t0, 20($t1)
+    jalr $t0
+    lw $ra, 4($sp)
+    addu $sp, $sp, 8
     sw $v0, 0($sp)
     lw $v0, 0($sp)
-    addu $sp, $sp, 20
+    addu $sp, $sp, 8
     jr $ra
 
 String_substring:
@@ -286,6 +260,13 @@ String_length:
     li $t0, 0
     sw $t0, 4($sp)
 
+    lw $a0, 8($sp)
+    subu $sp, $sp, 4
+    sw $ra, ($sp)
+    jal length
+    lw $ra, ($sp)
+    addu $sp, $sp, 4
+    sw  $v0, 4($sp)
     lw $v0, 4($sp)
     addu $sp, $sp, 8
     jr $ra
@@ -298,6 +279,36 @@ String_concat:
     li $t0, 0
     sw $t0, 4($sp)
 
+    lw $a0, 12($sp)
+    subu $sp, $sp, 4
+    sw $ra, ($sp)
+    jal length
+    lw $ra, ($sp)
+    addu $sp, $sp, 4
+    la $t0, ($v0)
+    lw $a0, 8($sp)
+    subu $sp, $sp, 8
+    sw $ra, 4($sp)
+    sw $t0, ($sp)
+    jal length
+    lw $t0, ($sp)
+    lw $ra, 4($sp)
+    addu $sp, $sp, 8
+    addu $v0, $v0, $t0
+    addu $v0, $v0, 1
+    li $a0, 9
+    syscall
+    la $a2, ($v0)
+    lb $a0, 12($sp)
+    lb $a0, ($a0)
+    lb $a1, 8($sp)
+    lb $a1, ($a1)
+    subu $sp, $sp, 4
+    sw $ra, ($sp)
+    jal concat
+    lw $ra, ($sp)
+    addu $sp, $sp, 4
+    sw  $v0, 4($sp)
     lw $v0, 4($sp)
     addu $sp, $sp, 8
     jr $ra
@@ -310,7 +321,7 @@ Object_type_name:
     li $t0, 0
     sw $t0, 4($sp)
 
-    <scope.VariableInfo object at 0x0000023D8DA2CC18> = TYPEOF 4
+    <scope.VariableInfo object at 0x000001D8E1912E80> = TYPEOF 8
     lw $v0, 4($sp)
     addu $sp, $sp, 8
     jr $ra
@@ -319,4 +330,53 @@ Object_abort:
 
     subu $sp, $sp, 0
     addu $sp, $sp, 0
+    jr $ra
+    length:
+    xor $t0, $t0, $t0
+    xor $t1, $t1, $t1
+    xor $v0, $v0, $v0
+    loop_length:
+    lb $t0, ($a0)
+    beq $t0, $t1, end_length
+    addu $v0, $v0, 1
+    addu $a0, $a0, 1
+    j loop_length
+    end_length:
+    jr $ra
+    concat:
+    xor $t0, $t0, $t0
+    xor $t1, $t1, $t1
+    loop_concat1:
+    lb $t0, ($a0)
+    beq $t0, $t1, concat2
+    sb $t0, ($a2)
+    add $a0, $a0, 1
+    add $a2, $a2, 1
+    j loop_concat1
+    concat2:
+    loop_concat2:
+    lb $t0, ($a1)
+    beq $t0, $t1, end_concat
+    sb $t0, ($a2)
+    add $a1, $a1, 1
+    add $a2, $a2, 1
+    j loop_concat2
+    end_concat:
+    sb $t1, ($a2)
+    jr $ra
+    check_hierarchy:
+    la $t0, ($a0)
+    la $t1, ($a1)
+    xor $t2, $t2, $t2
+    beq $t0, $t1, goodend_check_hierarchy
+    loop_check_hierarchy:
+    lw $t1, 4($t1)
+    beq $t1, $t2, badend_check_hierarchy
+    beq $t0, $t1, goodend_check_hierarchy
+    j loop_check_hierarchy
+    badend_check_hierarchy:
+    li $v0, 0
+    jr $ra
+    goodend_check_hierarchy:
+    li $v0, 1
     jr $ra
