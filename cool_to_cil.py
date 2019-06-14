@@ -81,7 +81,7 @@ class COOLToCILVisitor:
     def build_arg_name(self, fname, pname):
         return f"{fname}_{pname}"
 
-    def build_in_methods(self, a, node, cargs, m):
+    def build_in_methods(self, a, node, m):
         #m.cil_name = name
         instructions = []
         self.localvars = []
@@ -123,10 +123,14 @@ class COOLToCILVisitor:
         for expr in node.expr:
             self.visit(expr, type_tree)
 
-        self.build_in_methods(["self", "i", "l"], cil.CILSubstringNode, ("self", "i", "j"), type_tree.get_type("String").methods["substring"])
-        self.build_in_methods(["self"], cil.CILLengthNode, ("self",), type_tree.get_type("String").methods["length"])
-        self.build_in_methods(["self", "str"], cil.CILConcatNode, ("self", "str"), type_tree.get_type("String").methods["concat"])
-        self.build_in_methods(["self"], cil.CILTypeOfNode, ("self",), type_tree.get_type("Object").methods["type_name"])
+        self.build_in_methods(["self", "i", "l"], cil.CILSubstringNode, type_tree.get_type("String").methods["substring"])
+        self.build_in_methods(["self"], cil.CILLengthNode, type_tree.get_type("String").methods["length"])
+        self.build_in_methods(["self", "str"], cil.CILConcatNode, type_tree.get_type("String").methods["concat"])
+        self.build_in_methods(["self"], cil.CILTypeOfNode, type_tree.get_type("Object").methods["type_name"])
+        self.build_in_methods([], cil.CILReadStringNode, type_tree.get_type("IO").methods["in_string"])
+        self.build_in_methods([], cil.CILReadIntNode, type_tree.get_type("IO").methods["in_int"])
+        self.build_in_methods(["self"], cil.CILPrintStringNode, type_tree.get_type("IO").methods["out_string"])
+        self.build_in_methods(["self"], cil.CILPrintIntNode, type_tree.get_type("IO").methods["out_int"])
         #type_tree.get_type("Object").methods["abort"].cil_name = "abort"
         selfvar = VariableInfo("self")
         self.dotcode.append(cil.CILFunctionNode(type_tree.get_type("Object").methods["abort"].cil_name, [cil.CILParamNode(selfvar)], [], [cil.CILAbortNode(selfvar)]))
@@ -352,7 +356,10 @@ class COOLToCILVisitor:
             self.arguments.append(param.variable_info)
 
         self.current_function_name = node.vinfo.cil_name
-        self.instructions.append(cil.CILReturnNode(self.visit(node.body, type_tree)))
+        if node.name != "entry":
+            self.instructions.append(cil.CILReturnNode(self.visit(node.body, type_tree)))
+        else:
+            self.instructions.append(cil.CILEndProgram())
         self.dotcode.append(cil.CILFunctionNode(self.current_function_name, args, self.localvars, self.instructions))
 
     @visitor.when(ast.IsVoidNode)
