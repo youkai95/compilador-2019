@@ -359,7 +359,7 @@ class COOLToCILVisitor:
         if node.name != "entry":
             self.instructions.append(cil.CILReturnNode(self.visit(node.body, type_tree)))
         else:
-            self.instructions.append(cil.CILEndProgram())
+            self.instructions.append(cil.CILEndProgram(self.visit(node.body, type_tree)))
         self.dotcode.append(cil.CILFunctionNode(self.current_function_name, args, self.localvars, self.instructions))
 
     @visitor.when(ast.IsVoidNode)

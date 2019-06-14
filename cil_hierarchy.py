@@ -215,4 +215,5 @@ class CILPrintStringNode(CILInstructionNode):
         self.src = src
 
 class CILEndProgram(CILInstructionNode):
-    pass
+    def __init__(self, expr):
+        self.expr = expr

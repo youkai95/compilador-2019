@@ -108,11 +108,38 @@ Main: .asciiz "Main"
 
 entry:
 
-    subu $sp, $sp, 0
+    subu $sp, $sp, 16
+    li $t0, 0
+    sw $t0, 0($sp)
+    sw $t0, 4($sp)
+    li $t0, 0
+    sw $t0, 8($sp)
+    sw $t0, 12($sp)
+
+    li $a0, 8
+    li $v0, 9
+    syscall
+    sw $v0, 12($sp)
+    la $t1, 0($gp)
+    sw $t1, 8($sp)
+    lw $t0, 12($sp)
+    li $t1, 95
+    la $t2, 52($gp)
+    sd $t1, 0($t0)
+    lw $t2, 8($sp)
+    subu $sp, $sp, 12
+    sw $ra, 8($sp)
+    ld $t0, 20($sp)
+    sd $t0, 0($sp)
+    lw $t0, 32($t2)
+    jalr $t0
+    lw $ra, 8($sp)
+    addu $sp, $sp, 12
+    sd $v0, 0($sp)
     li $v0, 10
     xor $a0, $a0, $a0
     syscall
-    addu $sp, $sp, 0
+    addu $sp, $sp, 16
     jr $ra
 
 Main_main:
@@ -168,6 +195,31 @@ String_substring:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
+    la $a0, 16($sp)
+    subu $sp, $sp, 4
+    sw $ra, ($sp)
+    jal length
+    lw $ra, ($sp)
+    addu $sp, $sp, 4
+    lw $t0, 32($sp)
+    blt $t0, 0, error
+    lw $t1, 24($sp)
+    blt $t1, 0, error
+    add $t0, $t0, $t1
+    blt $v0, $t0, error
+    li $v0, 9
+    lw $a0, 24($sp)
+    syscall
+    la $a3, ($v0)
+    la $a0, 16($sp)
+    lw $a1, 32($sp)
+    lw $a2, 24($sp)
+    subu $sp, $sp, 4
+    sw $ra, ($sp)
+    jal substring
+    lw $ra, ($sp)
+    addu $sp, $sp, 4
+    sw  $v0, 8($sp)
     ld $v0, 8($sp)
     addu $sp, $sp, 16
     jr $ra
@@ -251,7 +303,7 @@ Object_type_name:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
-    <scope.VariableInfo object at 0x00000196E0697390> = TYPEOF 16
+    <scope.VariableInfo object at 0x0000020D3D115198> = TYPEOF 16
     ld $v0, 8($sp)
     addu $sp, $sp, 16
     jr $ra
@@ -343,9 +395,9 @@ IO_out_int:
     sw $t0, 12($sp)
 
     li $v0, 1
-    lw $a0, 12($sp)
+    lw $a0, 20($sp)
 syscall
-    ld $v0, 16($sp)
+    ld $v0, 8($sp)
     ld $v0, 8($sp)
     addu $sp, $sp, 16
     jr $ra
@@ -388,6 +440,20 @@ Object_abort:
     end_concat:
     sb $t1, ($a2)
     jr $ra
+substring:
+    xor $t1, $t1, $t1
+    add $a0, $a0, $a1
+write_substring:
+    lb $t0, ($a0)
+    beq $a2, $t1, end_substring
+    sb $t0, ($a3)
+    add $a0, $a0, 1
+    add $a3, $a3, 1
+    subu $a2, $a2, 1
+    j write_substring
+end_substring:
+    sb $t1, ($a3)
+    jr $ra
     check_hierarchy:
     la $t0, ($a0)
     la $t1, ($a1)
@@ -404,3 +470,5 @@ Object_abort:
     goodend_check_hierarchy:
     li $v0, 1
     jr $ra
+    error:
+    break 0
