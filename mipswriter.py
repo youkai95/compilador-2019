@@ -295,12 +295,13 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILGotoNode)
     def visit(self, node:cil.CILGotoNode):
-        self.emit(f'    GOTO {node.lname.lname}')
+        self.emit(f'    j {node.lname.lname}')
 
     @visitor.when(cil.CILGotoIfNode)
     def visit(self, node:cil.CILGotoIfNode):
         val = self.get_value(node.conditional_value)
-        self.emit(f'    GOTOIF {val} {node.lname.lname}')
+        self.emit(f'    li $t0 {val}')
+        self.emit(f'    beq $t0, 1, {node.lname.lname}')
 
     @visitor.when(cil.CILStaticCallNode)
     def visit(self, node:cil.CILStaticCallNode):
