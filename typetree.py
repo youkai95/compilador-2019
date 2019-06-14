@@ -39,7 +39,10 @@ class TypeTree:
         bool_type = ClassType("Bool", obj_type)
 
         io_methods = {"in_string" : MethodType("in_string", "String", []),
-                      "in_int" : MethodType("in_int", "Int", [])}
+                      "in_int" : MethodType("in_int", "Int", []),
+                      "out_string": MethodType("out_string", "IO", ["String"]),
+                      "out_int": MethodType("out_int", "IO", ["Int"])
+                      }
         io_type = ClassType("IO", obj_type, io_methods)
         self.type_dict = {
             "Object": obj_type,
