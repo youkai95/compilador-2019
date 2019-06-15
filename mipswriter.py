@@ -593,7 +593,7 @@ class MIPSWriterVisitor(object):
         else:
             self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
-        self.emit(f'    stl $t0, $t1, $t2')
+        self.emit(f'    slt $t0, $t1, $t2')
         self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
