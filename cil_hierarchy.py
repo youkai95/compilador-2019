@@ -190,7 +190,7 @@ class CILPrefixNode(CILInstructionNode):
     pass
 
 class CILSubstringNode(CILInstructionNode):
-    def __init__(self, i, l, src, dest):
+    def __init__(self, src, i, l, dest):
         self.i = i
         self.l = l
         self.src = src

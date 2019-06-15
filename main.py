@@ -395,9 +395,9 @@ v = parser.parse('''
 class Main inherits IO {
     main : Int <- 95;
     main() : IO {{
-        v <- main;
-        r <- let x : Int <- v, y : Int in y + x;
-        (new IO).out_int(r);
+        v <- "Mi culo pica mucho";
+        r <- let x : Int <- 1, y : Int in y + x;
+        out_string(v.substring(1, 5));
     }};
 };
 ''', lexer=l)
