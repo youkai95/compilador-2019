@@ -1,4 +1,5 @@
 .data
+data_0: .asciiz "Mi culo pica mucho"
 Object: .asciiz "Object"
 Int: .asciiz "Int"
 String: .asciiz "String"
@@ -115,12 +116,16 @@ entry:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
-    li $a0, 0
+    li $a0, 16
     li $v0, 9
     syscall
     sw $v0, 12($sp)
     la $t1, 0($gp)
     sw $t1, 8($sp)
+    lw $t0, 12($sp)
+    la $t1, 52($gp)
+    li $t2, 95
+    sd $t1, 0($t0)
     lw $t2, 8($sp)
     subu $sp, $sp, 12
     sw $ra, 8($sp)
@@ -139,7 +144,7 @@ entry:
 
 Main_main:
 
-    subu $sp, $sp, 80
+    subu $sp, $sp, 120
     li $t0, 0
     sw $t0, 0($sp)
     sw $t0, 4($sp)
@@ -170,66 +175,77 @@ Main_main:
     li $t0, 0
     sw $t0, 72($sp)
     sw $t0, 76($sp)
+    li $t0, 0
+    sw $t0, 80($sp)
+    sw $t0, 84($sp)
+    li $t0, 0
+    sw $t0, 88($sp)
+    sw $t0, 92($sp)
+    li $t0, 0
+    sw $t0, 96($sp)
+    sw $t0, 100($sp)
+    li $t0, 0
+    sw $t0, 104($sp)
+    sw $t0, 108($sp)
+    li $t0, 0
+    sw $t0, 112($sp)
+    sw $t0, 116($sp)
 
-    la $t0, 52($gp)
-    li $t1, 50
+    la $t0, data_0
+    la $t1, 68($gp)
+    sw $t1, 8($sp)
+    sw $t0, 12($sp)
+    ld $t0, 8($sp)
     sd $t0, 0($sp)
+    lw $t2, 28($sp)
+    lw $t1, 36($sp)
+    add $t1, $t1, $t2
     la $t0, 52($gp)
-    li $t1, 30
-    sd $t0, 8($sp)
-    li $t1, 4
+    sd $t0, 56($sp)
+    ld $t0, 56($sp)
+    sd $t0, 16($sp)
+    lw $t0, 124($sp)
+    ld $t1, 0($sp)
+    sd $t1, 8($t0)
+    lw $t2, 0($sp)
+    subu $sp, $sp, 12
+    sw $ra, 8($sp)
+    ld $t0, 12($sp)
+    sd $t0, 0($sp)
+    lw $t0, 20($t2)
+    jalr $t0
+    lw $ra, 8($sp)
+    addu $sp, $sp, 12
+    sd $v0, 72($sp)
+    lw $t1, 76($sp)
     li $t2, 5
     slt $t0, $t1, $t2
     la $t1, 96($gp)
-    sw $t1, 16($sp)
-    sw $t0, 20($sp)
-    lw $t0 20($sp)
+    sw $t1, 88($sp)
+    sw $t0, 92($sp)
+    li $t0 88
     beq $t0, 1, label_1
     li $a0, 0
     li $v0, 9
     syscall
-    sw $v0, 44($sp)
+    sw $v0, 108($sp)
     la $t1, 112($gp)
-    sw $t1, 40($sp)
-    lw $t2, 40($sp)
-    subu $sp, $sp, 20
-    sw $ra, 16($sp)
-    ld $t0, 60($sp)
-    sd $t0, 8($sp)
-    ld $t0, 28($sp)
-    sd $t0, 0($sp)
-    lw $t0, 28($t2)
-    jalr $t0
-    lw $ra, 16($sp)
-    addu $sp, $sp, 20
-    sd $v0, 32($sp)
-    ld $t0, 32($sp)
-    sd $t0, 24($sp)
+    sw $t1, 104($sp)
+    ld $t0, 104($sp)
+    sd $t0, 96($sp)
     j label_2
 label_1:
     li $a0, 0
     li $v0, 9
     syscall
-    sw $v0, 68($sp)
+    sw $v0, 116($sp)
     la $t1, 112($gp)
-    sw $t1, 64($sp)
-    lw $t2, 64($sp)
-    subu $sp, $sp, 20
-    sw $ra, 16($sp)
-    ld $t0, 84($sp)
-    sd $t0, 8($sp)
-    ld $t0, 20($sp)
-    sd $t0, 0($sp)
-    lw $t0, 28($t2)
-    jalr $t0
-    lw $ra, 16($sp)
-    addu $sp, $sp, 20
-    sd $v0, 56($sp)
-    ld $t0, 56($sp)
-    sd $t0, 24($sp)
+    sw $t1, 112($sp)
+    ld $t0, 112($sp)
+    sd $t0, 96($sp)
 label_2:
-    ld $v0, 24($sp)
-    addu $sp, $sp, 80
+    ld $v0, 96($sp)
+    addu $sp, $sp, 120
     jr $ra
 
 String_substring:
@@ -322,15 +338,14 @@ String_concat:
     lw $t0, ($sp)
     lw $ra, 4($sp)
     addu $sp, $sp, 8
-    addu $v0, $v0, $t0
-    addu $v0, $v0, 1
-    li $a0, 9
+    la $a0, ($v0)
+    addu $a0, $a0, $t0
+    addu $a0, $a0, 1
+    li $v0, 9
     syscall
     la $a2, ($v0)
-    lb $a0, 28($sp)
-    lb $a0, ($a0)
-    lb $a1, 20($sp)
-    lb $a1, ($a1)
+    lw $a0, 28($sp)
+    lw $a1, 20($sp)
     subu $sp, $sp, 4
     sw $ra, ($sp)
     jal concat
@@ -354,7 +369,7 @@ Object_type_name:
     sw $t0, 12($sp)
 
     lw $t1, 16($sp)
-    lw $t1, 4($t0)
+    lw $t1, 4($t1)
     la $t0, 68($gp)
     sd $t0, 8($sp)
     ld $v0, 8($sp)
