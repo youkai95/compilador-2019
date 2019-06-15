@@ -37,6 +37,9 @@ class COOLToCILVisitor:
         self.internal_count +=1
         return vname
 
+    def subscribe_internal_local(self, vinfo):
+        return self.register_local(vinfo)
+
     def define_internal_local(self):
         vinfo = VariableInfo('internal')
         return self.register_local(vinfo)
@@ -215,9 +218,7 @@ class COOLToCILVisitor:
             else:
                 node.variable_info.vmholder = ret_val
             return ret_val
-        var = self.define_internal_local()
-        node.variable_info.name = var.name
-        node.variable_info.vmholder = var.vmholder
+        var = self.subscribe_internal_local(node.variable_info)
         return var
 
     @visitor.when(ast.BlockNode)
@@ -235,9 +236,7 @@ class COOLToCILVisitor:
             self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
         else:
             if not node.variable_info.vmholder:
-                var = self.define_internal_local()
-                node.variable_info.name = var.name
-                node.variable_info.vmholder = var.vmholder
+                self.subscribe_internal_local(node.variable_info)
                 self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
             else:
                 #var = self.localvars[node.variable_info.vmholder].vinfo
@@ -534,4 +533,10 @@ class COOLToCILVisitor:
         self.instructions.append(r)
         return var
 
+    @visitor.when(ast.ComplementNode)
+    def visit(self, node, type_tree):
+        var = self.define_internal_local()
+        r = cil.CILComplementNode(self.visit(node.expr, type_tree), var)
+        self.instructions.append(r)
+        return var
     # ======================================================================

@@ -92,6 +92,11 @@ class CILNotNode(CILInstructionNode):
         self.expr = expr
         self.dst = dst
 
+class CILComplementNode(CILInstructionNode):
+    def __init__(self, expr, dst):
+        self.expr = expr
+        self.dst = dst
+
 class CILErrorNode(CILInstructionNode):
     pass
 

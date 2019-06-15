@@ -394,9 +394,11 @@ l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class Main inherits IO {
     main : Int <- 95;
-    main() : IO {
-        out_int("caca".length())
-    };
+    main() : IO {{
+        v <- main;
+        r <- let x : Int <- v, y : Int in y + x;
+        (new IO).out_int(r);
+    }};
 };
 ''', lexer=l)
 
