@@ -393,11 +393,15 @@ parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class Main inherits IO {
-    main : Int <- 95;
     main() : IO {{
-        v <- main;
-        r <- let x : Int <- v, y : Int in y + x;
-        (new IO).out_int(r);
+        v <- 50;
+        l <- 30;
+        if v < l
+        then 
+            (new IO).out_int(v)
+        else
+            (new IO).out_int(v)
+        fi;
     }};
 };
 ''', lexer=l)

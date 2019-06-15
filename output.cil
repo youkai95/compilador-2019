@@ -115,16 +115,12 @@ entry:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
-    li $a0, 8
+    li $a0, 0
     li $v0, 9
     syscall
     sw $v0, 12($sp)
     la $t1, 0($gp)
     sw $t1, 8($sp)
-    lw $t0, 12($sp)
-    la $t1, 52($gp)
-    li $t2, 95
-    sd $t1, 0($t0)
     lw $t2, 8($sp)
     subu $sp, $sp, 12
     sw $ra, 8($sp)
@@ -143,7 +139,7 @@ entry:
 
 Main_main:
 
-    subu $sp, $sp, 88
+    subu $sp, $sp, 96
     li $t0, 0
     sw $t0, 0($sp)
     sw $t0, 4($sp)
@@ -177,39 +173,69 @@ Main_main:
     li $t0, 0
     sw $t0, 80($sp)
     sw $t0, 84($sp)
+    li $t0, 0
+    sw $t0, 88($sp)
+    sw $t0, 92($sp)
 
-    lw $t0, 92($sp)
-    ld $t1, 0($t0)
-    sd $t1, 8($sp)
-    ld $t0, 8($sp)
-    sd $t0, 0($sp)
-    lw $t2, 4($sp)
-    lw $t1, 36($sp)
-    add $t1, $t1, $t2
     la $t0, 52($gp)
-    sd $t0, 56($sp)
-    ld $t0, 56($sp)
-    sd $t0, 16($sp)
+    li $t1, 50
+    sd $t0, 0($sp)
+    la $t0, 52($gp)
+    li $t1, 30
+    sd $t0, 8($sp)
+    lw $t1, 4($sp)
+    lw $t2, 12($sp)
+    slt $t0, $t1, $t2
+    la $t1, 96($gp)
+    sw $t1, 32($sp)
+    sw $t0, 36($sp)
+    li $t0 32
+    beq $t0, 1, label_1
     li $a0, 0
     li $v0, 9
     syscall
-    sw $v0, 76($sp)
+    sw $v0, 60($sp)
     la $t1, 112($gp)
-    sw $t1, 72($sp)
-    lw $t2, 72($sp)
+    sw $t1, 56($sp)
+    lw $t2, 56($sp)
     subu $sp, $sp, 20
     sw $ra, 16($sp)
-    ld $t0, 92($sp)
+    ld $t0, 76($sp)
     sd $t0, 8($sp)
-    ld $t0, 36($sp)
+    ld $t0, 20($sp)
     sd $t0, 0($sp)
     lw $t0, 28($t2)
     jalr $t0
     lw $ra, 16($sp)
     addu $sp, $sp, 20
-    sd $v0, 64($sp)
-    ld $v0, 64($sp)
-    addu $sp, $sp, 88
+    sd $v0, 48($sp)
+    ld $t0, 48($sp)
+    sd $t0, 40($sp)
+    j label_2
+label_1:
+    li $a0, 0
+    li $v0, 9
+    syscall
+    sw $v0, 84($sp)
+    la $t1, 112($gp)
+    sw $t1, 80($sp)
+    lw $t2, 80($sp)
+    subu $sp, $sp, 20
+    sw $ra, 16($sp)
+    ld $t0, 100($sp)
+    sd $t0, 8($sp)
+    ld $t0, 20($sp)
+    sd $t0, 0($sp)
+    lw $t0, 28($t2)
+    jalr $t0
+    lw $ra, 16($sp)
+    addu $sp, $sp, 20
+    sd $v0, 72($sp)
+    ld $t0, 72($sp)
+    sd $t0, 40($sp)
+label_2:
+    ld $v0, 40($sp)
+    addu $sp, $sp, 96
     jr $ra
 
 String_substring:
