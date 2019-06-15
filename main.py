@@ -134,7 +134,7 @@ def p_neg(p):
 
 
 def p_compl(p):
-    '''compl : complement idx'''
+    '''compl : complement expr'''
     p[0] = ast.ComplementNode(p[2])
 
 
@@ -394,13 +394,15 @@ l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class Main inherits IO {
     main : Int <- 95;
-    nalga : Object <- new Object;
+    nalga : Object;
     main() : IO {{
+        str <- 0;
         if isvoid nalga then
             out_int(85)
         else
-            out_int(0)
+            str <- in_int()
         fi;
+        out_int(~str);
     }};
 };
 ''', lexer=l)

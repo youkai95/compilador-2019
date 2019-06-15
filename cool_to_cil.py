@@ -232,7 +232,9 @@ class COOLToCILVisitor:
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode, type_tree):
         if node.variable_info.name in self.current_typename.attributes:
-            self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, self.visit(node.expr, type_tree)))
+            r = self.visit(node.expr, type_tree)
+            self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, r))
+            return r
         elif node.variable_info in self.arguments:
             self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
         else:
