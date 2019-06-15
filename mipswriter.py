@@ -344,8 +344,10 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILGotoIfNode)
     def visit(self, node:cil.CILGotoIfNode):
-        val = self.get_value(node.conditional_value)
-        self.emit(f'    li $t0 {val}')
+        if isinstance(node.conditional_value, int):
+            self.emit(f'    li $t0, {node.conditional_value}')
+        else:
+            self.emit(f'    lw $t0, {node.conditional_value.vmholder + 4}($sp)')
         self.emit(f'    beq $t0, 1, {node.lname.lname}')
 
     @visitor.when(cil.CILStaticCallNode)
@@ -566,21 +568,20 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILEqualNode)
     def visit(self, node: cil.CILEqualNode):
-        def visit(self, node: cil.CILLessEqualNode):
-            if isinstance(node.left, int):
-                self.emit(f'    li $t1, {node.left}')
-            else:
-                self.emit(f'    lw $t1, {node.left.vmholder + 4}($sp)')
+        if isinstance(node.left, int):
+            self.emit(f'    li $t1, {node.left}')
+        else:
+            self.emit(f'    lw $t1, {node.left.vmholder + 4}($sp)')
 
-            if isinstance(node.right, int):
-                self.emit(f'    li $t2, {node.right}')
-            else:
-                self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
+        if isinstance(node.right, int):
+            self.emit(f'    li $t2, {node.right}')
+        else:
+            self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
-            self.emit(f'    seq $t0, $t1, $t2')
-            self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
-            self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
-            self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
+        self.emit(f'    seq $t0, $t1, $t2')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
+        self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
     @visitor.when(cil.CILLessThanNode)
     def visit(self, node: cil.CILLessThanNode):

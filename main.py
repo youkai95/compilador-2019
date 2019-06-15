@@ -304,7 +304,7 @@ def p_conditional_expresion(p):
 
 def p_is_void(p):
     '''is_void : ISVOID expr'''
-    p[0] = ast.IsVoidNode(p[1])
+    p[0] = ast.IsVoidNode(p[2])
 
 
 def p_while_expresion(p):
@@ -394,11 +394,13 @@ l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class Main inherits IO {
     main : Int <- 95;
-    nalga : Object;
+    nalga : Object <- new Object;
     main() : IO {{
-        v <- "Mi culo pica mucho";
-        r <- let x : Int <- 1, y : Int in y + x;
-        nalga <- v;
+        if isvoid nalga then
+            out_int(85)
+        else
+            out_int(0)
+        fi;
     }};
 };
 ''', lexer=l)

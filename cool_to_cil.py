@@ -260,6 +260,7 @@ class COOLToCILVisitor:
     @visitor.when(ast.VariableNode)
     def visit(self, node:ast.VariableNode, type_tree):
         r = self.define_internal_local()
+        r.type = node.variable_info.type
         if node.variable_info.name in self.current_typename.attributes:
             self.instructions.append(cil.CILGetAttribNode(r, self.selftype, node.idx_token))
             return r

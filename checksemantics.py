@@ -144,7 +144,7 @@ class CheckSemanticsVisitor:
 
     @visitor.when(ast.IsVoidNode)
     def visit(self, node, scope, errors):
-        return self.visit(self, node.expr, scope, errors)
+        return self.visit(node.expr, scope, errors)
 
     @visitor.when(ast.DispatchInstanceNode)
     def visit(self, node, scope, errors):
