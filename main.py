@@ -394,13 +394,13 @@ l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
 class Main inherits IO {
     main() : IO {{
-        v <- 50;
-        l <- 30;
-        if v < l
+        v <- "50";
+        l <- "301";
+        if v.length() < 5
         then 
             (new IO).out_int(v)
         else
-            (new IO).out_int(v)
+            (new IO).out_int(l)
         fi;
     }};
 };

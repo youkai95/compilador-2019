@@ -139,7 +139,7 @@ entry:
 
 Main_main:
 
-    subu $sp, $sp, 96
+    subu $sp, $sp, 80
     li $t0, 0
     sw $t0, 0($sp)
     sw $t0, 4($sp)
@@ -170,12 +170,6 @@ Main_main:
     li $t0, 0
     sw $t0, 72($sp)
     sw $t0, 76($sp)
-    li $t0, 0
-    sw $t0, 80($sp)
-    sw $t0, 84($sp)
-    li $t0, 0
-    sw $t0, 88($sp)
-    sw $t0, 92($sp)
 
     la $t0, 52($gp)
     li $t1, 50
@@ -183,46 +177,46 @@ Main_main:
     la $t0, 52($gp)
     li $t1, 30
     sd $t0, 8($sp)
-    lw $t1, 4($sp)
-    lw $t2, 12($sp)
+    li $t1, 4
+    li $t2, 5
     slt $t0, $t1, $t2
     la $t1, 96($gp)
-    sw $t1, 32($sp)
-    sw $t0, 36($sp)
-    li $t0 32
+    sw $t1, 16($sp)
+    sw $t0, 20($sp)
+    lw $t0 20($sp)
     beq $t0, 1, label_1
     li $a0, 0
     li $v0, 9
     syscall
-    sw $v0, 60($sp)
+    sw $v0, 44($sp)
     la $t1, 112($gp)
-    sw $t1, 56($sp)
-    lw $t2, 56($sp)
+    sw $t1, 40($sp)
+    lw $t2, 40($sp)
     subu $sp, $sp, 20
     sw $ra, 16($sp)
-    ld $t0, 76($sp)
+    ld $t0, 60($sp)
     sd $t0, 8($sp)
-    ld $t0, 20($sp)
+    ld $t0, 28($sp)
     sd $t0, 0($sp)
     lw $t0, 28($t2)
     jalr $t0
     lw $ra, 16($sp)
     addu $sp, $sp, 20
-    sd $v0, 48($sp)
-    ld $t0, 48($sp)
-    sd $t0, 40($sp)
+    sd $v0, 32($sp)
+    ld $t0, 32($sp)
+    sd $t0, 24($sp)
     j label_2
 label_1:
     li $a0, 0
     li $v0, 9
     syscall
-    sw $v0, 84($sp)
+    sw $v0, 68($sp)
     la $t1, 112($gp)
-    sw $t1, 80($sp)
-    lw $t2, 80($sp)
+    sw $t1, 64($sp)
+    lw $t2, 64($sp)
     subu $sp, $sp, 20
     sw $ra, 16($sp)
-    ld $t0, 100($sp)
+    ld $t0, 84($sp)
     sd $t0, 8($sp)
     ld $t0, 20($sp)
     sd $t0, 0($sp)
@@ -230,12 +224,12 @@ label_1:
     jalr $t0
     lw $ra, 16($sp)
     addu $sp, $sp, 20
-    sd $v0, 72($sp)
-    ld $t0, 72($sp)
-    sd $t0, 40($sp)
+    sd $v0, 56($sp)
+    ld $t0, 56($sp)
+    sd $t0, 24($sp)
 label_2:
-    ld $v0, 40($sp)
-    addu $sp, $sp, 96
+    ld $v0, 24($sp)
+    addu $sp, $sp, 80
     jr $ra
 
 String_substring:
@@ -248,25 +242,26 @@ String_substring:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
-    la $a0, 16($sp)
+    lw $a0, 36($sp)
     subu $sp, $sp, 4
     sw $ra, ($sp)
     jal length
     lw $ra, ($sp)
     addu $sp, $sp, 4
-    lw $t0, 36($sp)
+    lw $t0, 28($sp)
     blt $t0, 0, error
-    lw $t1, 28($sp)
+    lw $t1, 20($sp)
     blt $t1, 0, error
     add $t0, $t0, $t1
     blt $v0, $t0, error
     li $v0, 9
-    lw $a0, 28($sp)
+    lw $a0, 20($sp)
+    add $a0, $a0, 1
     syscall
     la $a3, ($v0)
-    la $a0, 20($sp)
-    lw $a1, 36($sp)
-    lw $a2, 28($sp)
+    lw $a0, 36($sp)
+    lw $a1, 28($sp)
+    lw $a2, 20($sp)
     subu $sp, $sp, 4
     sw $ra, ($sp)
     jal substring
@@ -434,10 +429,10 @@ IO_out_string:
     sw $t0, 8($sp)
     sw $t0, 12($sp)
 
-    lw $v0, 4
-    lw $a0, 12($sp)
+    li $v0, 4
+    lw $a0, 20($sp)
 syscall
-    ld $v0, 16($sp)
+    ld $v0, 8($sp)
     ld $v0, 8($sp)
     addu $sp, $sp, 16
     jr $ra

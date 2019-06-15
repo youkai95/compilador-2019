@@ -344,8 +344,11 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILGotoIfNode)
     def visit(self, node:cil.CILGotoIfNode):
-        val = self.get_value(node.conditional_value)
-        self.emit(f'    li $t0 {val}')
+        if isinstance(node.conditional_value, int):
+            self.emit(f'    li $t0 {node.conditional_value}')
+        else:
+            self.emit(f'    lw $t0 {node.conditional_value.vmholder + 4}($sp)')
+
         self.emit(f'    beq $t0, 1, {node.lname.lname}')
 
     @visitor.when(cil.CILStaticCallNode)
@@ -577,7 +580,7 @@ class MIPSWriterVisitor(object):
                 self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
             self.emit(f'    seq $t0, $t1, $t2')
-            self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+            self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
             self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
             self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -594,7 +597,7 @@ class MIPSWriterVisitor(object):
             self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
         self.emit(f'    slt $t0, $t1, $t2')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -610,7 +613,7 @@ class MIPSWriterVisitor(object):
         else:
             self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
         self.emit(f'    sle $t0, $t1, $t2')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -625,7 +628,7 @@ class MIPSWriterVisitor(object):
         self.emit(f'    jal check_hierarchy')
         self.emit(f'    lw $ra, ($sp)')
         self.emit(f'    addu $sp, $sp, 4')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $v0, {node.dest.vmholder + 4}($sp)')
 
@@ -638,7 +641,7 @@ class MIPSWriterVisitor(object):
         var = self.get_value(node.expr)
         self.emit(f'    li $t0, {var}')
         self.emit(f'    not $t0, $t0')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dst.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dst.vmholder + 4}($sp)')
 
@@ -654,6 +657,6 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t0, {var}')
         self.emit(f'    li $t1, 0')
         self.emit(f'    xor $t0, $t0, $t1')
-        self.emit(f'    sa $t1, {self.types["Int"].pos}($gp)')
+        self.emit(f'    l $t1, {self.types["Int"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dst.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dst.vmholder + 4}($sp)')
