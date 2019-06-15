@@ -330,7 +330,7 @@ class MIPSWriterVisitor(object):
     @visitor.when(cil.CILTypeOfNode)
     def visit(self, node:cil.CILTypeOfNode):
         self.emit(f'    lw $t1, {node.src.vmholder}($sp)')
-        self.emit(f'    lw $t1, 4($t0)')
+        self.emit(f'    lw $t1, 4($t1)')
         self.emit(f'    la $t0, {self.types["String"].pos}($gp)')
         self.emit(f'    sd $t0, {node.dst.vmholder}($sp)')
 
@@ -443,15 +443,16 @@ class MIPSWriterVisitor(object):
         self.emit(f'    lw $t0, ($sp)')
         self.emit(f'    lw $ra, 4($sp)')
         self.emit(f'    addu $sp, $sp, 8')
-        self.emit(f'    addu $v0, $v0, $t0')
-        self.emit(f'    addu $v0, $v0, 1')
-        self.emit(f'    li $a0, 9')
+        self.emit(f'    la $a0, ($v0)')
+        self.emit(f'    addu $a0, $a0, $t0')
+        self.emit(f'    addu $a0, $a0, 1')
+        self.emit(f'    li $v0, 9')
         self.emit(f'    syscall')
         self.emit(f'    la $a2, ($v0)')
-        self.emit(f'    lb $a0, {node.str.vmholder + 4}($sp)')
-        self.emit(f'    lb $a0, ($a0)')
-        self.emit(f'    lb $a1, {node.src.vmholder + 4}($sp)')
-        self.emit(f'    lb $a1, ($a1)')
+        self.emit(f'    lw $a0, {node.str.vmholder + 4}($sp)')
+        #self.emit(f'    lb $a0, ($a0)')
+        self.emit(f'    lw $a1, {node.src.vmholder + 4}($sp)')
+        #self.emit(f'    lb $a1, ($a1)')
         self.emit(f'    subu $sp, $sp, 4')
         self.emit(f'    sw $ra, ($sp)')
         self.emit(f'    jal concat')
@@ -577,7 +578,7 @@ class MIPSWriterVisitor(object):
                 self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
             self.emit(f'    seq $t0, $t1, $t2')
-            self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+            self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
             self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
             self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -594,7 +595,7 @@ class MIPSWriterVisitor(object):
             self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
 
         self.emit(f'    slt $t0, $t1, $t2')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -610,7 +611,7 @@ class MIPSWriterVisitor(object):
         else:
             self.emit(f'    lw $t2, {node.right.vmholder + 4}($sp)')
         self.emit(f'    sle $t0, $t1, $t2')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dest.vmholder + 4}($sp)')
 
@@ -625,7 +626,7 @@ class MIPSWriterVisitor(object):
         self.emit(f'    jal check_hierarchy')
         self.emit(f'    lw $ra, ($sp)')
         self.emit(f'    addu $sp, $sp, 4')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dest.vmholder}($sp)')
         self.emit(f'    sw $v0, {node.dest.vmholder + 4}($sp)')
 
@@ -638,7 +639,7 @@ class MIPSWriterVisitor(object):
         var = self.get_value(node.expr)
         self.emit(f'    li $t0, {var}')
         self.emit(f'    not $t0, $t0')
-        self.emit(f'    sa $t1, {self.types["Bool"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Bool"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dst.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dst.vmholder + 4}($sp)')
 
@@ -654,6 +655,6 @@ class MIPSWriterVisitor(object):
         self.emit(f'    li $t0, {var}')
         self.emit(f'    li $t1, 0')
         self.emit(f'    xor $t0, $t0, $t1')
-        self.emit(f'    sa $t1, {self.types["Int"].pos}($gp)')
+        self.emit(f'    la $t1, {self.types["Int"].pos}($gp)')
         self.emit(f'    sw $t1, {node.dst.vmholder}($sp)')
         self.emit(f'    sw $t0, {node.dst.vmholder + 4}($sp)')

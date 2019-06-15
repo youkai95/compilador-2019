@@ -217,6 +217,7 @@ class COOLToCILVisitor:
                 node.variable_info.vmholder = ret_val.vmholder
             else:
                 node.variable_info.vmholder = ret_val
+            self.subscribe_internal_local(node.variable_info)
             return ret_val
         var = self.subscribe_internal_local(node.variable_info)
         return var
