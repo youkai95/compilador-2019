@@ -392,13 +392,28 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
+class A {
+    factorial(a:Int):Int{
+    if a < 2
+        then a
+        else a * factorial(a - 1)
+    fi
+    };
+};
+class B inherits A {
+    print(a:Int):IO{
+    (new IO).out_int(a)
+    };
+};
+class C inherits B {
+};
 class Main inherits IO {
-    main : Int <- 95;
-    nalga : Object;
     main() : IO {{
-        v <- "Mi culo pica mucho";
-        r <- let x : Int <- 1, y : Int in y + x;
-        nalga <- v;
+        A <- new A;
+        B <- new B;
+        C <- new C;
+        
+        out_int((new A).factorial(5));
     }};
 };
 ''', lexer=l)

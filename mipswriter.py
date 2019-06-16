@@ -31,7 +31,7 @@ class MIPSWriterVisitor(object):
         self.emit(f'    beq $t0, $t1, goodend_check_hierarchy')
 
         self.emit(f'    loop_check_hierarchy:')
-        self.emit(f'    lw $t1, 4($t1)')
+        self.emit(f'    lw $t1, ($t1)')
         self.emit(f'    beq $t1, $t2, badend_check_hierarchy')
         self.emit(f'    beq $t0, $t1, goodend_check_hierarchy')
         self.emit(f'    j loop_check_hierarchy')
@@ -248,7 +248,7 @@ class MIPSWriterVisitor(object):
         else:
             self.emit(f'    lw $t1, {node.left.vmholder + 4}($sp)')
 
-        self.emit(f'    sub $t1, $t1, $2')
+        self.emit(f'    sub $t1, $t1, $t2')
         self.emit(f'    la $t0, {self.types["Int"].pos}($gp)')
         self.emit(f'    sd $t0, {node.dest.vmholder}($sp)')
 
@@ -263,7 +263,7 @@ class MIPSWriterVisitor(object):
         else:
             self.emit(f'    lw $t1, {node.left.vmholder + 4}($sp)')
 
-        self.emit(f'    mulo $t1, $t1, $2')
+        self.emit(f'    mulo $t1, $t1, $t2')
         self.emit(f'    la $t0, {self.types["Int"].pos}($gp)')
         self.emit(f'    sd $t0, {node.dest.vmholder}($sp)')
 
@@ -279,7 +279,7 @@ class MIPSWriterVisitor(object):
             self.emit(f'    lw $t1, {node.left.vmholder + 4}($sp)')
 
         self.emit(f'    div $t1, $t2')
-        self.visit(f'   mflo $t1')
+        self.emit(f'    mflo $t1')
         self.emit(f'    la $t0, {self.types["Int"].pos}($gp)')
         self.emit(f'    sd $t0, {node.dest.vmholder}($sp)')
 
@@ -344,8 +344,11 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILGotoIfNode)
     def visit(self, node:cil.CILGotoIfNode):
-        val = self.get_value(node.conditional_value)
-        self.emit(f'    li $t0 {val}')
+        if isinstance(node.conditional_value, int):
+            self.emit(f'    li $t0 {node.conditional_value}')
+        else:
+            self.emit(f'    lw $t0 {node.conditional_value.vmholder + 4}($sp)')
+
         self.emit(f'    beq $t0, 1, {node.lname.lname}')
 
     @visitor.when(cil.CILStaticCallNode)
@@ -392,7 +395,6 @@ class MIPSWriterVisitor(object):
         self.emit(f'    jalr $t0')
         self.emit(f'    lw $ra, {l}($sp)')
         self.emit(f'    addu $sp, $sp, {l + 4}')
-        # TODO Cambiar para devolver los 64bits y guardar usando sd
         self.emit(f'    sd $v0, {dest}($sp)')
         self.args.clear()
 
@@ -617,10 +619,8 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILCheckHierarchy)
     def visit(self, node: cil.CILCheckHierarchy):
-        self.emit(f'    lw $a0, {node.a.vmholder + 4}($sp)')
-        self.emit(f'    lw $a0, ($a0)')
-        self.emit(f'    la $a1, ($gp)')
-        self.emit(f'    add $a1, $a1, {node.b.pos}')
+        self.emit(f'    la $a0, {self.types[node.a].pos}($gp)')
+        self.emit(f'    lw $a1, {node.b.vmholder}($sp)')
         self.emit(f'    subu $sp, $sp, 4')
         self.emit(f'    sw $ra, ($sp)')
         self.emit(f'    jal check_hierarchy')
