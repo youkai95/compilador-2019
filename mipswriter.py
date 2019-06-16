@@ -215,10 +215,10 @@ class MIPSWriterVisitor(object):
 
     @visitor.when(cil.CILAssignNode)
     def visit(self, node:cil.CILAssignNode):
-        self.emit(f'    lw $t0, {node.dest.vmholder}($sp)')
-        self.emit(f'    lw $t1, {node.source.vmholder}($sp)')
-        self.emit(f'    la $t2, {self.types["Object"].pos}($gp)')
-        self.emit(f'    beq $t0, $t2, labb')
+        #self.emit(f'    lw $t0, {node.dest.vmholder}($sp)')
+        #self.emit(f'    lw $t1, {node.source.vmholder}($sp)')
+        #self.emit(f'    la $t2, {self.types["Object"].pos}($gp)')
+        #self.emit(f'    beq $t0, $t2, labb')
 
         if type(node.source) == int:
             self.emit(f'    la $t0, {self.types["Int"].pos}($gp)')
