@@ -166,6 +166,7 @@ class COOLToCILVisitor:
         right_ret = self.visit(node.right, type_tree)
         r = cil.CILPlusNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
+        r.dest.type = node.type
         return r.dest
 
     @visitor.when(ast.MinusNode)
@@ -174,6 +175,7 @@ class COOLToCILVisitor:
         right_ret = self.visit(node.right, type_tree)
         r = cil.CILMinusNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
+        r.dest.type = node.type
         return r.dest
 
     @visitor.when(ast.StarNode)
@@ -182,6 +184,7 @@ class COOLToCILVisitor:
         right_ret = self.visit(node.right, type_tree)
         r = cil.CILStarNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
+        r.dest.type = node.type
         return r.dest
 
     @visitor.when(ast.DivNode)
@@ -190,6 +193,7 @@ class COOLToCILVisitor:
         right_ret = self.visit(node.right, type_tree)
         r = cil.CILDivNode(self.define_internal_local(), left_ret, right_ret)
         self.instructions.append(r)
+        r.dest.type = node.type
         return r.dest
 
     @visitor.when(ast.NegationNode)
@@ -198,6 +202,7 @@ class COOLToCILVisitor:
         if type(ret_val) == int:
             return -ret_val
         r = self.define_internal_local()
+        r.type = node.type
         self.instructions.append(cil.CILMinusNode(r, 0, ret_val))
         return r
 
@@ -227,24 +232,34 @@ class COOLToCILVisitor:
         result = 0
         for instruction in node.expr_list:
             result = self.visit(instruction, type_tree)
+        result.type = node.type
         return result
 
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode, type_tree):
+        r = self.visit(node.expr, type_tree)
         if node.variable_info.name in self.current_typename.attributes:
-            r = self.visit(node.expr, type_tree)
-            self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, r))
+            if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+                box = self.define_internal_local()
+                self.instructions.append(cil.CILBoxVariable(r, box))
+                self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, box))
+            else:
+                self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, r))
             return r
         elif node.variable_info in self.arguments:
-            self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
-        else:
-            if not node.variable_info.vmholder:
-                self.subscribe_internal_local(node.variable_info)
-                self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
+            if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+                self.instructions.append(cil.CILBoxVariable(r, node.variable_info))
             else:
-                #var = self.localvars[node.variable_info.vmholder].vinfo
-                #node.variable_info.name = var.name
-                self.instructions.append(cil.CILAssignNode(node.variable_info, self.visit(node.expr, type_tree)))
+                self.instructions.append(cil.CILAssignNode(node.variable_info, r))
+        else:
+            if node.variable_info.vmholder is None:
+                self.subscribe_internal_local(node.variable_info)
+                self.instructions.append(cil.CILAssignNode(node.variable_info, r))
+            else:
+                if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+                    self.instructions.append(cil.CILBoxVariable(r, node.variable_info))
+                else:
+                    self.instructions.append(cil.CILAssignNode(node.variable_info, r))
 
         return node.variable_info
 
@@ -257,6 +272,7 @@ class COOLToCILVisitor:
         data = self.register_data(node.string)
         var = self.define_internal_local()
         self.instructions.append(cil.CILLoadNode(var, data))
+        var.type = node.type
         return var
 
     @visitor.when(ast.VariableNode)
@@ -284,7 +300,7 @@ class COOLToCILVisitor:
         ret_val = self.visit(node.expr, type_tree)
         strc = cil.CILToStrNode(self.define_internal_local(), ret_val)
         self.instructions.append(strc)
-        self.instructions.append(cil.CILPrintNode(strc.dest))
+        self.instructions.append(cil.CILPrintIntNode(strc.dest))
         return strc.dest
 
     @visitor.when(ast.PrintStringNode)
@@ -292,7 +308,7 @@ class COOLToCILVisitor:
         data = self.register_data(node.string_token)
         var = self.define_internal_local()
         self.instructions.append(cil.CILLoadNode(var, data))
-        self.instructions.append(cil.CILPrintNode(var))
+        self.instructions.append(cil.CILPrintStringNode(var))
         return 0
 
     @visitor.when(ast.ScanNode)
@@ -304,6 +320,7 @@ class COOLToCILVisitor:
     @visitor.when(ast.NewNode)
     def visit(self, node: ast.NewNode, type_tree: TypeTree):
         var = self.define_internal_local()
+        var.type = node.type
         self.instructions.append(cil.CILAllocateNode(type_tree.get_type(node.type_token), var))
         t = type_tree.get_type(node.type_token)
         while t:
@@ -311,6 +328,10 @@ class COOLToCILVisitor:
                 decl = attr.decl
                 if decl.expr:
                     self.instructions.append(cil.CILSetAttribNode(var, name, self.visit(decl.expr, type_tree)))
+                else:
+                    lvar = self.define_internal_local()
+                    lvar.type = decl.type
+                    self.instructions.append(cil.CILSetAttribNode(var, name, lvar))
 
             t = t.parent
         return var
@@ -338,6 +359,7 @@ class COOLToCILVisitor:
         self.instructions.append(doIf)
         self.instructions.append(cil.CILAssignNode(v1, self.visit(node.expr, type_tree)))
         self.instructions.append(end)
+        v1.type = node.type
         return v1
 
 
@@ -478,21 +500,42 @@ class COOLToCILVisitor:
         args = []
         r = self.define_internal_local()
         args.append(cil.CILArgNode(self.selftype))
+        i = 0
         for param in node.expresion_list:
-            args.append(cil.CILArgNode(self.visit(param, type_tree)))
+            p = self.visit(param, type_tree)
+            if node.method_type.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+                v = self.define_internal_local()
+                v.type = type_tree.get_type(node.method_type.params[i])
+                self.instructions.append(cil.CILBoxVariable(p, v))
+                args.append(cil.CILArgNode(v))
+            else:
+                args.append(cil.CILArgNode(p))
+            i += 1
         self.instructions += args
         self.instructions.append(cil.CILDinamicCallNode(self.current_typename.name, node.idx_token, r))
+        r.type = node.type
         return r
 
     @visitor.when(ast.DispatchParentInstanceNode)
     def visit(self, node: ast.DispatchParentInstanceNode, type_tree:TypeTree):
         r = self.define_internal_local()
         args = []
+        method = type_tree.get_type(node.parent).methods[node.method]
         args.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        i = 0
         for param in node.params:
-            args.append(cil.CILArgNode(self.visit(param, type_tree)))
+            p = self.visit(param, type_tree)
+            if method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+                v = self.define_internal_local()
+                v.type = type_tree.get_type(method.params[i])
+                self.instructions.append(cil.CILBoxVariable(p, v))
+                args.append(cil.CILArgNode(v))
+            else:
+                args.append(cil.CILArgNode(p))
+            i += 1
         self.instructions += args
         self.instructions.append(cil.CILStaticCallNode(node.parent, node.method, r))
+        r.type = node.type
         return r
 
     @visitor.when(ast.DispatchInstanceNode)
@@ -500,10 +543,21 @@ class COOLToCILVisitor:
         r = self.define_internal_local()
         args = []
         args.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
+        method = type_tree.get_type(node.variable.type.name).methods[node.method]
+        i = 0
         for param in node.params:
-            args.append(cil.CILArgNode(self.visit(param, type_tree)))
+            p = self.visit(param, type_tree)
+            if method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+                v = self.define_internal_local()
+                v.type = type_tree.get_type(method.params[i])
+                self.instructions.append(cil.CILBoxVariable(p, v))
+                args.append(cil.CILArgNode(v))
+            else:
+                args.append(cil.CILArgNode(p))
+            i += 1
         self.instructions += args
         self.instructions.append(cil.CILDinamicCallNode(node.variable.type.name, node.method, r))
+        r.type = node.type
         return r
 
     @visitor.when(ast.LessThanNode)
@@ -512,6 +566,7 @@ class COOLToCILVisitor:
         rigth_ret = self.visit(node.right, type_tree)
         ret_type = cil.CILLessThanNode(self.define_internal_local(), left_ret, rigth_ret)
         self.instructions.append(ret_type)
+        ret_type.dest.type = node.type
         return ret_type.dest
 
     @visitor.when(ast.LessEqualNode)
@@ -520,6 +575,7 @@ class COOLToCILVisitor:
         rigth_ret = self.visit(node.right, type_tree)
         ret_type = cil.CILLessEqualNode(self.define_internal_local(), left_ret, rigth_ret)
         self.instructions.append(ret_type)
+        ret_type.dest.type = node.type
         return ret_type.dest
 
     @visitor.when(ast.EqualNode)
@@ -528,6 +584,7 @@ class COOLToCILVisitor:
         rigth_ret = self.visit(node.right, type_tree)
         ret_type = cil.CILEqualNode(self.define_internal_local(), left_ret, rigth_ret)
         self.instructions.append(ret_type)
+        ret_type.dest.type = node.type
         return ret_type.dest
 
     @visitor.when(ast.NotNode)
@@ -542,5 +599,6 @@ class COOLToCILVisitor:
         var = self.define_internal_local()
         r = cil.CILComplementNode(self.visit(node.expr, type_tree), var)
         self.instructions.append(r)
+        var.type = node.type
         return var
     # ======================================================================

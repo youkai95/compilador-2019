@@ -396,7 +396,10 @@ class Main inherits IO {
     main : Int <- 95;
     nalga : Object;
     main() : IO {{
-        str <- 0;
+        nalg <- new Object;
+        nalg <- let x : Int <- 9 in x;
+        str <- 2;
+        out_string("");
         if isvoid nalga then
             out_int(85)
         else
@@ -404,6 +407,11 @@ class Main inherits IO {
         fi;
         out_int(~str);
     }};
+    test(v : Object) : Object {
+        58
+    }
+};
+class A inherits IO {
 };
 ''', lexer=l)
 

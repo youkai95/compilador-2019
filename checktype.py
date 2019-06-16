@@ -196,6 +196,7 @@ class CheckTypeVisitor:
             errors.append("Incorrect number of parameters")
         t = tree.get_type(temp.ret_type)
         node.type = t
+        node.method_type = temp
         return t
 
     @visitor.when(ast.DispatchInstanceNode)

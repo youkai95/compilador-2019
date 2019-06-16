@@ -222,3 +222,13 @@ class CILPrintStringNode(CILInstructionNode):
 class CILEndProgram(CILInstructionNode):
     def __init__(self, expr):
         self.expr = expr
+
+class CILBoxVariable(CILInstructionNode):
+    def __init__(self, variable, dest):
+        self.variable = variable
+        self.dest = dest
+
+class CILUnboxVariable(CILInstructionNode):
+    def __init__(self, variable, dest):
+        self.variable = variable
+        self.dest = dest

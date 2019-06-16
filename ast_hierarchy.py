@@ -140,6 +140,7 @@ class DispatchNode(AtomicNode):
         AtomicNode.__init__(self)
         self.idx_token = idx_token
         self.expresion_list = expresion_list
+        self.method_type = None
 
 class IntegerNode(AtomicNode):
     def __init__(self, integer_token):
