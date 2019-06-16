@@ -134,7 +134,7 @@ def p_neg(p):
 
 
 def p_compl(p):
-    '''compl : complement expr'''
+    '''compl : complement idx'''
     p[0] = ast.ComplementNode(p[2])
 
 
@@ -304,7 +304,7 @@ def p_conditional_expresion(p):
 
 def p_is_void(p):
     '''is_void : ISVOID expr'''
-    p[0] = ast.IsVoidNode(p[2])
+    p[0] = ast.IsVoidNode(p[1])
 
 
 def p_while_expresion(p):
@@ -392,17 +392,38 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 v = parser.parse('''
+class A {
+    factorial(a:Int):Int{
+    if a < 2
+        then a
+        else a * factorial(a - 1)
+    fi
+    };
+};
+class B inherits A {
+    print(a:Int):IO{
+    (new IO).out_int(a)
+    };
+};
+class C inherits B {
+};
 class Main inherits IO {
-    main : Int <- 95;
-    nalga : Object;
+    
+    d: A;
     main() : IO {{
-        str <- 0;
-        if isvoid nalga then
-            out_int(85)
-        else
-            str <- in_int()
-        fi;
-        out_int(~str);
+        A <- new A;
+        B <- new B;
+        C <- new C;
+        c <- new Object;
+        c <- B;
+        case c of
+            q : Object => d <- new A;
+            q : A => d <- q;
+            q : B => d <- q;
+            q : C => d <- q;
+        esac;
+        
+        out_string(d.type_name());
     }};
 };
 ''', lexer=l)

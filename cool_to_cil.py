@@ -398,11 +398,11 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.WhileNode)
     def visit(self, node: ast.WhileNode, type_tree):
-        v = self.visit(node.conditional_token, type_tree)
         start = cil.CILLabelNode(self.gen_label())
         dowhile = cil.CILLabelNode(self.gen_label())
         end = cil.CILLabelNode(self.gen_label())
         self.instructions.append(start)
+        v = self.visit(node.conditional_token, type_tree)
         self.instructions.append(cil.CILGotoIfNode(v, dowhile))
         self.instructions.append(cil.CILGotoNode(end))
         self.instructions.append(dowhile)
@@ -415,19 +415,22 @@ class COOLToCILVisitor:
     def visit(self, node: ast.CaseNode, type_tree):
         expr = self.visit(node.expr, type_tree)
         labels = []
-        tunels = []
-        bases = []
+        tunels = [[]]
+        bases = [[]]
         end = cil.CILLabelNode(self.gen_label())
         ends = []
         checkr = self.define_internal_local()
 
         for i in range(len(node.expresion_list)):
             temp = cil.CILLabelNode(self.gen_label())
-            t1 = cil.CILLabelNode(self.gen_label())
-            t2 =  cil.CILLabelNode(self.gen_label())
             labels.append(temp)
-            tunels.append(t1)
-            bases.append(t2)
+            for j in range(i + 1, len(node.expresion_list)):
+                t1 = cil.CILLabelNode(self.gen_label())
+                t2 = cil.CILLabelNode(self.gen_label())
+                tunels[len(tunels) - 1].append(t1)
+                bases[len(bases) - 1].append(t2)
+            bases.append([])
+            tunels.append([])
             check = cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr)
             self.instructions.append(check)
             self.instructions.append(cil.CILGotoIfNode(checkr, temp))
@@ -442,17 +445,19 @@ class COOLToCILVisitor:
                 check = type_tree.check_variance(e2, e1)
                 #check = cil.CILCheckTypeHierarchy(checkr, e2, e1)
                 #self.instructions.append(check)
-                self.instructions.append(cil.CILGotoIfNode(check, tunels[j]))
-                self.instructions.append(bases[j])
+                check = 1 if check else 0
+                self.instructions.append(cil.CILGotoIfNode(check, tunels[i][j - i -1]))
+                self.instructions.append(bases[i][j - i - 1])
             t = cil.CILLabelNode(self.gen_label())
             ends.append(t)
             self.instructions.append(cil.CILGotoNode(t))
 
-        for i in range(0, len(tunels)):
-            self.instructions.append(tunels[i])
-            self.instructions.append(cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr))
-            self.instructions.append(cil.CILGotoIfNode(checkr, labels[i]))
-            self.instructions.append(cil.CILGotoNode(bases[i]))
+        for i in range(0, len(bases)):
+            for j in range(0, len(bases[i])):
+                self.instructions.append(tunels[i][j])
+                self.instructions.append(cil.CILCheckHierarchy(checkr, node.expresion_list[i + j + 1].variable.type_token, expr))
+                self.instructions.append(cil.CILGotoIfNode(checkr, labels[i + j + 1]))
+                self.instructions.append(cil.CILGotoNode(bases[i][j]))
 
         r = self.define_internal_local()
         for i in range(len(ends)):
@@ -471,7 +476,7 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node: ast.BooleanNode, type_tree):
-        return True if node.value == "true" else False
+        return 1 if node.value == "true" else 0
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode, type_tree):
