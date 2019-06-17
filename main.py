@@ -8,7 +8,6 @@ import ast_hierarchy as ast
 import logging
 
 from checktype import CheckTypeVisitor
-from cilwriter import CILWriterVisitor
 from cool_to_cil import COOLToCILVisitor
 from mipswriter import MIPSWriterVisitor
 from scope import Scope
@@ -392,7 +391,7 @@ def t_error(t):
     t.lexer.skip(1)
 
 parser = yacc.yacc(start="program")
-l = lex.lex(debug=True, debuglog=log)
+l = lex.lex()
 
 f = open(sys.argv[1], 'r')
 text = "".join(f.readlines())
