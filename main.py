@@ -1,3 +1,5 @@
+import sys
+
 from ply import yacc
 from ply import lex
 from checksemantics import CheckSemanticsVisitor
@@ -392,40 +394,9 @@ def t_error(t):
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
 
-'''class A {
-    factorial(a:Int):Int{
-    if a < 2
-        then a
-        else a * factorial(a - 1)
-    fi
-    };
-};
-class B inherits A {
-    print(a:Int):IO{
-    (new IO).out_int(a)
-    };
-};
-class C inherits B {
-};'''
-v = parser.parse('''
-class Main inherits IO {
-    main() : IO {{
-        assert(2 = 3, 5);
-    }};
-    
-    assert(b : Bool, line : Int) : IO {{
-        if b then out_string("ok") else {
-            out_string("paso 1");
-            out_int(line);
-            out_string("paso 2");
-        } fi;
-        if line = 0 then out_string("Termine") 
-        else
-        assert(b, line - 1)
-        fi;
-    }};
-};
-''', lexer=l)
+f = open(sys.argv[1], 'r')
+text = "".join(f.readlines())
+v = parser.parse(text, lexer=l)
 
 # CUSTOM TYPES CHECK (1st step)
 errors = []
@@ -452,8 +423,8 @@ scope = Scope()
 csvisitor = CheckSemanticsVisitor()
 is_ok = csvisitor.visit(v, scope, errors)
 
-print('Succeed!' if is_ok else 'Fail!')
 if len(errors) > 0:
+    print('Fail!')
     for e in errors:
         print(e)
     exit()
@@ -462,6 +433,7 @@ typecheck = CheckTypeVisitor()
 typecheck.visit(v, type_tree, errors)
 
 if len(errors) > 0:
+    print('Fail!')
     for e in errors:
         print(e)
     exit()
@@ -477,8 +449,8 @@ a = cil.visit(v, type_tree)
 writer = MIPSWriterVisitor()
 writer.visit(a, type_tree)
 
-file = open("output.cil", 'w')
+file = open(sys.argv[2], 'w')
 file.writelines(writer.output)
 file.close()
 
-print()
+print('Succeed!')
