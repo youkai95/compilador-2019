@@ -391,7 +391,7 @@ def t_error(t):
     print("Illegal character '%s'" % t.value[0])
     t.lexer.skip(1)
 
-parser = yacc.yacc(start="program", debug=True, debuglog=log)
+parser = yacc.yacc(start="program")
 l = lex.lex(debug=True, debuglog=log)
 
 f = open(sys.argv[1], 'r')
