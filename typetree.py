@@ -1,3 +1,6 @@
+from ast_hierarchy import PropertyNode, DeclarationNode
+
+
 class ClassType:
     def __init__(self, name, parent=None, methods=None, attrb=None):
         self.name = name
@@ -25,7 +28,9 @@ class TypeTree:
         #MethodType("copy", "Self_Type", [])
         obj_methods = {"abort" : MethodType("abort", "Object", []),
                        "type_name" : MethodType("type_name", "String", [])}
-        obj_type = ClassType("Object", None, obj_methods)
+        h = DeclarationNode("holder")
+        h.type = None
+        obj_type = ClassType("Object", None, obj_methods, {"holder": PropertyNode(h)})
 
         void = ClassType("Void", None)
 

@@ -223,6 +223,7 @@ class COOLToCILVisitor:
             else:
                 node.variable_info.vmholder = ret_val
             self.subscribe_internal_local(node.variable_info)
+            self.instructions.append(cil.CILAssignNode(node.variable_info, ret_val))
             return ret_val
         var = self.subscribe_internal_local(node.variable_info)
         return var
@@ -232,14 +233,15 @@ class COOLToCILVisitor:
         result = 0
         for instruction in node.expr_list:
             result = self.visit(instruction, type_tree)
-        result.type = node.type
+        if isinstance(result, VariableInfo):
+            result.type = node.type
         return result
 
     @visitor.when(ast.AssignNode)
     def visit(self, node:ast.AssignNode, type_tree):
         r = self.visit(node.expr, type_tree)
         if node.variable_info.name in self.current_typename.attributes:
-            if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+            if (not type(r) == VariableInfo and node.type.name == "Object") or (node.type.name == "Object" and r.type.name in ["Int", "Bool"]):
                 box = self.define_internal_local()
                 self.instructions.append(cil.CILBoxVariable(r, box))
                 self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, box))
@@ -247,7 +249,7 @@ class COOLToCILVisitor:
                 self.instructions.append(cil.CILSetAttribNode(self.selftype, node.idx_token, r))
             return r
         elif node.variable_info in self.arguments:
-            if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+            if (not type(r) == VariableInfo and node.type.name == "Object") or (node.type.name == "Object" and r.type.name in ["Int", "Bool"]):
                 self.instructions.append(cil.CILBoxVariable(r, node.variable_info))
             else:
                 self.instructions.append(cil.CILAssignNode(node.variable_info, r))
@@ -256,7 +258,7 @@ class COOLToCILVisitor:
                 self.subscribe_internal_local(node.variable_info)
                 self.instructions.append(cil.CILAssignNode(node.variable_info, r))
             else:
-                if node.type.name == "Object" and r.type.name in ["Int", "Bool"]:
+                if (not type(r) == VariableInfo and node.type.name == "Object") or (node.type.name == "Object" and r.type.name in ["Int", "Bool"]):
                     self.instructions.append(cil.CILBoxVariable(r, node.variable_info))
                 else:
                     self.instructions.append(cil.CILAssignNode(node.variable_info, r))
@@ -323,7 +325,11 @@ class COOLToCILVisitor:
         var.type = node.type
         self.instructions.append(cil.CILAllocateNode(type_tree.get_type(node.type_token), var))
         t = type_tree.get_type(node.type_token)
+        temp = self.current_typename
+        selftemp = self.selftype
+        self.selftype = var
         while t:
+            self.current_typename = t
             for name, attr in t.attributes.items():
                 decl = attr.decl
                 if decl.expr:
@@ -334,6 +340,8 @@ class COOLToCILVisitor:
                     self.instructions.append(cil.CILSetAttribNode(var, name, lvar))
 
             t = t.parent
+        self.selftype = selftemp
+        self.current_typename = temp
         return var
 
     @visitor.when(ast.ClassNode)
@@ -412,7 +420,7 @@ class COOLToCILVisitor:
         # return r.dest
 
         expr = self.visit(node.expr, type_tree)
-        if expr.type.name == "Bool" or expr.type.name == "Int" or expr.type.name == "String":
+        if not isinstance(expr, VariableInfo) or expr.type.name == "Bool" or expr.type.name == "Int" or expr.type.name == "String":
             return 0
         result = cil.CILEqualNode(self.define_internal_local(), expr, 0)
         self.instructions.append(result)
@@ -442,6 +450,10 @@ class COOLToCILVisitor:
         end = cil.CILLabelNode(self.gen_label())
         ends = []
         checkr = self.define_internal_local()
+        case_var = None
+        if isinstance(expr, VariableInfo) and expr.type.name == "Object":
+            case_var = self.define_internal_local()
+            self.instructions.append(cil.CILUnboxVariable(expr, case_var))
 
         for i in range(len(node.expresion_list)):
             temp = cil.CILLabelNode(self.gen_label())
@@ -453,7 +465,10 @@ class COOLToCILVisitor:
                 bases[len(bases) - 1].append(t2)
             bases.append([])
             tunels.append([])
-            check = cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr)
+            if isinstance(expr, VariableInfo) and expr.type.name == "Object":
+                check = cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, case_var)
+            else:
+                check = cil.CILCheckHierarchy(checkr, node.expresion_list[i].variable.type_token, expr)
             self.instructions.append(check)
             self.instructions.append(cil.CILGotoIfNode(checkr, temp))
         self.instructions.append(cil.CILErrorNode)
@@ -477,14 +492,22 @@ class COOLToCILVisitor:
         for i in range(0, len(bases)):
             for j in range(0, len(bases[i])):
                 self.instructions.append(tunels[i][j])
-                self.instructions.append(cil.CILCheckHierarchy(checkr, node.expresion_list[i + j + 1].variable.type_token, expr))
+                if isinstance(expr, VariableInfo) and expr.type.name == "Object":
+                    self.instructions.append(cil.CILCheckHierarchy(checkr, node.expresion_list[i + j + 1].variable.type_token, case_var))
+                else:
+                    self.instructions.append(
+                        cil.CILCheckHierarchy(checkr, node.expresion_list[i + j + 1].variable.type_token, expr))
                 self.instructions.append(cil.CILGotoIfNode(checkr, labels[i + j + 1]))
                 self.instructions.append(cil.CILGotoNode(bases[i][j]))
 
         r = self.define_internal_local()
         for i in range(len(ends)):
             self.instructions.append(ends[i])
-            e = self.visit(node.expresion_list[i], type_tree, expr)
+            e = None
+            if isinstance(expr, VariableInfo) and expr.type.name == "Object":
+                e = self.visit(node.expresion_list[i], type_tree, case_var)
+            else:
+                e = self.visit(node.expresion_list[i], type_tree, expr)
             self.instructions.append(cil.CILAssignNode(r, e))
             self.instructions.append(cil.CILGotoNode(end))
 
@@ -498,7 +521,7 @@ class COOLToCILVisitor:
 
     @visitor.when(ast.BooleanNode)
     def visit(self, node: ast.BooleanNode, type_tree):
-        return 1 if node.value == "true" else 0
+        return True if node.value == "true" else False
 
     @visitor.when(ast.DispatchNode)
     def visit(self, node: ast.DispatchNode, type_tree):
@@ -508,9 +531,9 @@ class COOLToCILVisitor:
         i = 0
         for param in node.expresion_list:
             p = self.visit(param, type_tree)
-            if node.method_type.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+            if (not type(p) == VariableInfo and node.type.name == "Object") or (node.method_type.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]):
                 v = self.define_internal_local()
-                v.type = type_tree.get_type(node.method_type.params[i])
+                v.type = type_tree.get_type(node.method_type.param_types[i])
                 self.instructions.append(cil.CILBoxVariable(p, v))
                 args.append(cil.CILArgNode(v))
             else:
@@ -530,7 +553,7 @@ class COOLToCILVisitor:
         i = 0
         for param in node.params:
             p = self.visit(param, type_tree)
-            if method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+            if (not type(p) == VariableInfo and node.type.name == "Object") or (method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]):
                 v = self.define_internal_local()
                 v.type = type_tree.get_type(method.params[i])
                 self.instructions.append(cil.CILBoxVariable(p, v))
@@ -548,11 +571,12 @@ class COOLToCILVisitor:
         r = self.define_internal_local()
         args = []
         args.append(cil.CILArgNode(self.visit(node.variable, type_tree)))
-        method = type_tree.get_type(node.variable.type.name).methods[node.method]
+        method = node.method_type
+
         i = 0
         for param in node.params:
             p = self.visit(param, type_tree)
-            if method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]:
+            if (not type(p) == VariableInfo and node.type.name == "Object") or (method.param_types[i] == "Object" and p.type.name in ["Int", "Bool"]):
                 v = self.define_internal_local()
                 v.type = type_tree.get_type(method.params[i])
                 self.instructions.append(cil.CILBoxVariable(p, v))

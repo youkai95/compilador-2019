@@ -202,6 +202,7 @@ class DispatchInstanceNode(ExpressionNode):
         self.variable = variable
         self.method = method
         self.params = params
+        self.method_type = None
 
 class LessThanNode(BinaryOperatorNode):
     pass

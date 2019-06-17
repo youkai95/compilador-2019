@@ -1,5 +1,7 @@
 import visitor
 import ast_hierarchy as ast
+from typetree import TypeTree
+
 
 class CheckTypeVisitor:
 
@@ -210,6 +212,7 @@ class CheckTypeVisitor:
                     r = m
                     break
             ctype = ctype.parent
+        node.method_type = r
         if not r:
             errors.append("Class '%s' doesnt contains method '%s'" % (var_type.name, node.method))
             return tree.get_type("Void")
@@ -270,11 +273,11 @@ class CheckTypeVisitor:
         return t
 
     @visitor.when(ast.MethodNode)
-    def visit(self, node, tree, errors):
+    def visit(self, node, tree: TypeTree, errors):
         for param in node.params:
             self.visit(param, tree, errors)
         v = self.visit(node.body, tree, errors)
-        if not v or v.name != node.ret_type:
+        if not v or not tree.check_variance(tree.get_type(node.ret_type), v): # v.name != node.ret_type
             errors.append("Method return type mistmatch")
         node.type = v
         return v

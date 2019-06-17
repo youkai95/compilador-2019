@@ -63,7 +63,7 @@ t_div = r'/'
 t_printx = r'print'
 t_scanx = r'scan'
 t_number = r'[0-9]+'
-t_string = r'\"([^\\\n]|(\\.))*?\"' #r'\"(([a-z\x0b-!\#-_])*(\\\n))*\"'  # r'\"(([_-\x09\x0b-!\#-_])*(\\\n))*\"'
+t_string =  r'\"([^\\\n]|(\\.))*?\"' #r'\"(([_-\x09\x0b-!\#-_])*(\\\n))*\"' # #  #r'\"(([a-z\x0b-!\#-_])*(\\\n))*\"'
 t_complement = r'~'
 t_less = r'<'
 t_less_equal = r'<='
@@ -129,12 +129,12 @@ def p_program_a(p):
 
 
 def p_neg(p):
-    '''neg : NOT idx'''
+    '''neg : NOT expr'''
     p[0] = ast.NotNode(p[2])
 
 
 def p_compl(p):
-    '''compl : complement idx'''
+    '''compl : complement expr'''
     p[0] = ast.ComplementNode(p[2])
 
 
@@ -304,7 +304,7 @@ def p_conditional_expresion(p):
 
 def p_is_void(p):
     '''is_void : ISVOID expr'''
-    p[0] = ast.IsVoidNode(p[1])
+    p[0] = ast.IsVoidNode(p[2])
 
 
 def p_while_expresion(p):
@@ -391,8 +391,8 @@ def t_error(t):
 
 parser = yacc.yacc(start="program", debug=True, debuglog=log)
 l = lex.lex(debug=True, debuglog=log)
-v = parser.parse('''
-class A {
+
+'''class A {
     factorial(a:Int):Int{
     if a < 2
         then a
@@ -406,24 +406,23 @@ class B inherits A {
     };
 };
 class C inherits B {
-};
+};'''
+v = parser.parse('''
 class Main inherits IO {
-    
-    d: A;
     main() : IO {{
-        A <- new A;
-        B <- new B;
-        C <- new C;
-        c <- new Object;
-        c <- B;
-        case c of
-            q : Object => d <- new A;
-            q : A => d <- q;
-            q : B => d <- q;
-            q : C => d <- q;
-        esac;
-        
-        out_string(d.type_name());
+        assert(2 = 3, 5);
+    }};
+    
+    assert(b : Bool, line : Int) : IO {{
+        if b then out_string("ok") else {
+            out_string("paso 1");
+            out_int(line);
+            out_string("paso 2");
+        } fi;
+        if line = 0 then out_string("Termine") 
+        else
+        assert(b, line - 1)
+        fi;
     }};
 };
 ''', lexer=l)
